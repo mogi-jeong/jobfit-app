@@ -981,6 +981,55 @@
   ══════════════════ */
   .badge-open { background: rgba(0,196,113,0.1); color: var(--success); }
   input, textarea, select { font-family: inherit; }
+
+  /* ── 알바찾기 필터 탭 ── */
+  .filter-tab {
+    padding: 12px 14px;
+    background: none; border: none;
+    font-size: 13px; font-weight: 600;
+    color: var(--text-3); cursor: pointer;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap; transition: all 0.15s;
+    font-family: inherit;
+  }
+  .filter-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+  /* 날짜 구분 라벨 */
+  .date-group-label {
+    padding: 14px 20px 6px;
+    font-size: 12px; font-weight: 800;
+    color: var(--text-2);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+
+  .point-tag {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: 11px; font-weight: 700;
+    color: #7C5CFC;
+    background: rgba(124,92,252,0.1);
+    padding: 3px 8px; border-radius: 20px;
+    margin-left: 6px;
+  }
+
+  .badge-applied { background: rgba(74,144,217,0.12); color: #4A90D9; }
+  .map-back-btn {
+    position: absolute; top: 12px; left: 12px; z-index: 10;
+    width: 34px; height: 34px;
+    background: rgba(0,0,0,0.45); backdrop-filter: blur(6px);
+    border: none; border-radius: 50%;
+    color: white; font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+  }
+
+  .job-point-tag {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: 11px; font-weight: 700;
+    color: #7C5CFC;
+    background: rgba(124,92,252,0.1);
+    padding: 3px 8px; border-radius: 20px;
+    white-space: nowrap;
+  }
 </style>
 </head>
 <body>
@@ -1035,6 +1084,7 @@
           <div class="step-dot active"></div>
           <div class="step-dot"></div>
           <div class="step-dot"></div>
+          <div class="step-dot"></div>
         </div>
         <div class="signup-title">기본 정보를 입력해주세요</div>
         <div class="signup-sub">가입 후 변경이 가능해요</div>
@@ -1048,6 +1098,10 @@
           <input class="signup-input" type="text" placeholder="예) 2000.01.01" maxlength="10" oninput="formatBirth(this)" />
         </div>
         <div class="signup-field">
+          <div class="signup-label">휴대폰 번호</div>
+          <input class="signup-input" id="signup-phone" type="tel" placeholder="010-0000-0000" maxlength="13" oninput="formatPhone(this)" />
+        </div>
+        <div class="signup-field">
           <div class="signup-label">성별</div>
           <div class="gender-row">
             <button class="gender-btn" onclick="selectGender(this)">👨 남</button>
@@ -1056,35 +1110,64 @@
         </div>
         <div class="signup-field">
           <div class="signup-label">지역 (서울)</div>
-          <div class="region-grid" style="grid-template-columns:1fr 1fr 1fr;">
-            <button class="region-btn" onclick="selectRegion(this)">강남구</button>
-            <button class="region-btn" onclick="selectRegion(this)">강동구</button>
-            <button class="region-btn" onclick="selectRegion(this)">강북구</button>
-            <button class="region-btn" onclick="selectRegion(this)">강서구</button>
-            <button class="region-btn" onclick="selectRegion(this)">관악구</button>
-            <button class="region-btn" onclick="selectRegion(this)">광진구</button>
-            <button class="region-btn" onclick="selectRegion(this)">구로구</button>
-            <button class="region-btn" onclick="selectRegion(this)">금천구</button>
-            <button class="region-btn" onclick="selectRegion(this)">노원구</button>
-            <button class="region-btn" onclick="selectRegion(this)">도봉구</button>
-            <button class="region-btn" onclick="selectRegion(this)">동대문구</button>
-            <button class="region-btn" onclick="selectRegion(this)">동작구</button>
-            <button class="region-btn" onclick="selectRegion(this)">마포구</button>
-            <button class="region-btn" onclick="selectRegion(this)">서대문구</button>
-            <button class="region-btn" onclick="selectRegion(this)">서초구</button>
-            <button class="region-btn" onclick="selectRegion(this)">성동구</button>
-            <button class="region-btn" onclick="selectRegion(this)">성북구</button>
-            <button class="region-btn" onclick="selectRegion(this)">송파구</button>
-            <button class="region-btn" onclick="selectRegion(this)">양천구</button>
-            <button class="region-btn" onclick="selectRegion(this)">영등포구</button>
-            <button class="region-btn" onclick="selectRegion(this)">용산구</button>
-            <button class="region-btn" onclick="selectRegion(this)">은평구</button>
-            <button class="region-btn" onclick="selectRegion(this)">종로구</button>
-            <button class="region-btn" onclick="selectRegion(this)">중구</button>
-            <button class="region-btn" onclick="selectRegion(this)">중랑구</button>
-          </div>
+          <select class="signup-input" id="signup-region" style="appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7684' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 14px center;">
+            <option value="">구를 선택하세요</option>
+            <option>강남구</option>
+            <option>강동구</option>
+            <option>강북구</option>
+            <option>강서구</option>
+            <option>관악구</option>
+            <option>광진구</option>
+            <option>구로구</option>
+            <option>금천구</option>
+            <option>노원구</option>
+            <option>도봉구</option>
+            <option>동대문구</option>
+            <option>동작구</option>
+            <option>마포구</option>
+            <option>서대문구</option>
+            <option>서초구</option>
+            <option>성동구</option>
+            <option>성북구</option>
+            <option>송파구</option>
+            <option>양천구</option>
+            <option>영등포구</option>
+            <option>용산구</option>
+            <option>은평구</option>
+            <option>종로구</option>
+            <option>중구</option>
+            <option>중랑구</option>
+          </select>
         </div>
-        <button class="full-btn" style="margin-top:8px;" onclick="showScreen('screen-agree')">다음</button>
+        <!-- 계좌 정보 -->
+        <div class="signup-field" style="margin-top:8px;">
+          <div class="signup-label">급여 수령 은행</div>
+          <select class="signup-input" id="signup-bank" style="appearance:none;">
+            <option value="">은행 선택</option>
+            <option>국민은행</option>
+            <option>신한은행</option>
+            <option>우리은행</option>
+            <option>하나은행</option>
+            <option>농협은행</option>
+            <option>기업은행</option>
+            <option>카카오뱅크</option>
+            <option>토스뱅크</option>
+            <option>케이뱅크</option>
+            <option>새마을금고</option>
+            <option>우체국</option>
+            <option>기타</option>
+          </select>
+        </div>
+        <div class="signup-field">
+          <div class="signup-label">계좌번호</div>
+          <input class="signup-input" id="signup-account" type="text" placeholder="- 없이 숫자만 입력" oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
+        </div>
+        <div class="signup-field">
+          <div class="signup-label">예금주</div>
+          <input class="signup-input" id="signup-account-name" type="text" placeholder="예금주 실명" />
+        </div>
+
+        <button class="full-btn" style="margin-top:8px;" onclick="saveSignupAndNext()">다음</button>
       </div>
     </div>
   </div>
@@ -1101,6 +1184,7 @@
         <div class="step-indicator">
           <div class="step-dot"></div>
           <div class="step-dot active"></div>
+          <div class="step-dot"></div>
           <div class="step-dot"></div>
         </div>
         <div class="signup-title">개인정보 활용에 동의해주세요</div>
@@ -1143,6 +1227,7 @@
           <div class="step-dot"></div>
           <div class="step-dot"></div>
           <div class="step-dot active"></div>
+          <div class="step-dot"></div>
         </div>
         <div class="signup-title">안전교육 내용을 확인해주세요</div>
         <div class="signup-sub">내용 확인 후 서명해주세요</div>
@@ -1663,6 +1748,13 @@
       <!-- 내 신청 현황 -->
       <div class="section-title">📋 내 신청 현황</div>
       <div style="padding: 0 16px;">
+        <!-- 빈 상태 (신청 없을 때) -->
+        <div id="apply-empty" style="display:none; text-align:center; padding:32px 0;">
+          <div style="font-size:40px; margin-bottom:12px;">📋</div>
+          <div style="font-size:15px; font-weight:700; color:var(--text); margin-bottom:6px;">아직 신청한 알바가 없어요</div>
+          <div style="font-size:13px; color:var(--text-2); margin-bottom:20px;">알바 찾기에서 원하는 공고를 신청해보세요!</div>
+          <button onclick="workerTab('map',null)" style="background:var(--primary);color:white;border:none;border-radius:20px;padding:10px 24px;font-size:13px;font-weight:700;cursor:pointer;">알바 찾기 →</button>
+        </div>
 
         <!-- 3/17 (월) 승인 + 출근활성 -->
         <div class="apply-status-card">
@@ -1678,7 +1770,7 @@
             <div class="apply-status-badge approved">승인</div>
           </div>
           <div class="apply-card-bottom">
-            <span class="apply-card-bottom-label">근무 1시간 전 출근 버튼 활성화</span>
+            <span class="apply-card-bottom-label">근무 1시간 전 출근 버튼 활성화<span class="point-tag">+1,000P</span></span>
             <button class="checkin-btn active" id="checkin-mon" onclick="doCheckin('checkin-mon','L타워 웨딩홀')">출근하기</button>
           </div>
         </div>
@@ -1697,7 +1789,7 @@
             <div class="apply-status-badge approved">승인</div>
           </div>
           <div class="apply-card-bottom">
-            <span class="apply-card-bottom-label">D-2</span>
+            <span class="apply-card-bottom-label">D-2<span class="point-tag">+1,000P</span></span>
             <button class="checkin-btn" id="checkin-wed" onclick="showLateModal('checkin-wed','L타워 웨딩홀 수요일')">출근하기</button>
           </div>
         </div>
@@ -1734,7 +1826,7 @@
             <div class="apply-status-badge approved">승인</div>
           </div>
           <div class="apply-card-bottom">
-            <span class="apply-card-bottom-label">D-5</span>
+            <span class="apply-card-bottom-label">D-5<span class="point-tag">+2,000P</span></span>
             <button class="checkin-btn" onclick="showLateModal('','L타워 웨딩홀 토요일')">출근하기</button>
           </div>
         </div>
@@ -1762,7 +1854,7 @@
       <div style="height:16px;"></div>
 
       <!-- 지각 사유 모달 -->
-      <div id="late-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:flex-end;" onclick="closeLateModal(event)">
+      <div id="late-modal-overlay" style="display:none; position:absolute; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:flex-end;" onclick="closeLateModal(event)">
         <div id="late-modal" style="background:white; border-radius:20px 20px 0 0; padding:24px 20px 36px; width:100%; box-sizing:border-box;" onclick="event.stopPropagation()">
           <div style="font-size:16px; font-weight:700; margin-bottom:6px;">⚠️ 출근 시간이 아직 안됐어요</div>
           <div style="font-size:13px; color:var(--text-2); margin-bottom:16px;">출근 버튼은 근무 1시간 전부터 활성화돼요.<br>불가피한 사유가 있다면 아래에 적어주세요.</div>
@@ -1772,28 +1864,136 @@
       </div>
 
       <!-- 근로계약서 모달 -->
-      <div id="contract-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:flex-end;" onclick="closeContractModal(event)">
-        <div style="background:white; border-radius:20px 20px 0 0; padding:24px 20px 36px; width:100%; box-sizing:border-box; max-height:80vh; overflow-y:auto;" onclick="event.stopPropagation()">
-          <div style="font-size:16px; font-weight:700; margin-bottom:4px;">📄 근로계약서</div>
-          <div style="font-size:12px; color:var(--text-2); margin-bottom:16px;">내용을 확인하고 서명해주세요</div>
-          <div class="agree-box" style="font-size:12px; max-height:180px;">
-            <b>단기 근로계약서</b><br><br>
-            근로자명: 김진호<br>
-            근무지: L타워 웨딩홀<br>
-            근무일시: 월요일 09:00–18:00<br>
-            시급: 협의 금액<br>
-            업무내용: 웨딩홀 식음 서빙<br><br>
-            위 사항에 동의하며 성실히 근무할 것을 확인합니다.
+      <div id="contract-modal-overlay" style="display:none; position:absolute; inset:0; background:rgba(0,0,0,0.6); z-index:1000; align-items:flex-end;" onclick="closeContractModal(event)">
+        <div style="background:white; border-radius:24px 24px 0 0; width:100%; box-sizing:border-box; max-height:86%; display:flex; flex-direction:column;" onclick="event.stopPropagation()">
+
+          <!-- 헤더 -->
+          <div style="padding:20px 20px 0; flex-shrink:0;">
+            <div style="width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px;"></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+              <div style="font-size:17px;font-weight:800;color:var(--text);">일용직 근로계약서</div>
+              <div style="font-size:11px;font-weight:600;color:var(--primary);background:rgba(255,92,53,0.1);padding:4px 10px;border-radius:20px;">서명 필요</div>
+            </div>
+            <div style="font-size:12px;color:var(--text-2);">내용 확인 후 하단에 서명해주세요</div>
           </div>
-          <div class="signup-label" style="margin:12px 0 8px;">✍️ 서명</div>
-          <div class="sign-canvas-wrap">
-            <canvas id="sign-canvas-contract" width="320" height="100"
-              ontouchstart="startSign(event,'contract')" ontouchmove="drawSign(event,'contract')" ontouchend="endSign('contract')"
-              onmousedown="startSign(event,'contract')" onmousemove="drawSign(event,'contract')" onmouseup="endSign('contract')"
-              style="touch-action:none; cursor:crosshair;"></canvas>
+
+          <!-- 계약서 본문 스크롤 영역 -->
+          <div style="flex:1;overflow-y:auto;padding:16px 20px;font-size:12px;color:var(--text);line-height:1.9;">
+
+            <div style="text-align:center;font-size:14px;font-weight:800;margin-bottom:14px;letter-spacing:2px;">[ 일 용 직 근 로 계 약 서 ]</div>
+            <div style="background:var(--bg);border-radius:10px;padding:12px;margin-bottom:14px;font-size:11px;color:var(--text-2);line-height:1.7;">
+              "회사"와 "근로자"는 회사의 제반규정을 준수하며 아래사항을 성실히 이행할 것을 확약하고 상호 자유의사에 따라 근로계약을 체결한다.
+            </div>
+
+            <!-- 자동입력 정보 카드 -->
+            <div style="background:rgba(255,92,53,0.05);border:1.5px solid rgba(255,92,53,0.2);border-radius:12px;padding:14px;margin-bottom:14px;">
+              <div style="font-size:11px;font-weight:700;color:var(--primary);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.3px;">● 자동 입력된 정보</div>
+              <div style="display:grid;grid-template-columns:80px 1fr;gap:6px;font-size:12px;">
+                <span style="color:var(--text-2);">근로계약일자</span>
+                <span style="font-weight:600;" id="ct-date">2026년 3월 17일</span>
+                <span style="color:var(--text-2);">성명</span>
+                <span style="font-weight:600;" id="ct-name">김진호</span>
+                <span style="color:var(--text-2);">생년월일</span>
+                <span style="font-weight:600;" id="ct-birth">2000.01.01</span>
+                <span style="color:var(--text-2);">연락처</span>
+                <span style="font-weight:600;" id="ct-phone">010-0000-0000</span>
+                <span style="color:var(--text-2);">주소</span>
+                <span style="font-weight:600;" id="ct-addr">서울 강남구</span>
+              </div>
+            </div>
+
+            <div style="font-weight:700;margin-bottom:6px;">1. 근로계약일자</div>
+            <div style="margin-bottom:12px;padding-left:8px;color:var(--text-2);">
+              → 본 근로계약서는 근로일마다 작성하고, 계약은 익일 작업종료(발송마감) 시에 종료된다.<br>
+              → 해당 근로일에 출근하지 않을 경우 계약 포기로 간주한다.
+            </div>
+
+            <div style="font-weight:700;margin-bottom:6px;">2. 근무지 및 업무</div>
+            <div style="margin-bottom:12px;padding-left:8px;color:var(--text-2);">
+              → 근무지 : 경기 성남시 분당구 성남대로925번길 16 성남종합버스터미널 지하1층 W힐스컨벤션<br>
+              → 업 무 : 홀서빙, 기타 사용자가 지시하는 업무
+            </div>
+
+            <div style="font-weight:700;margin-bottom:6px;">3. 근무시간 및 휴게시간</div>
+            <div style="margin-bottom:12px;padding-left:8px;color:var(--text-2);">
+              → 근무시간 09:00~18:00 / 휴게시간 12:00~13:00<br>
+              [근로기준법 제54조(휴게), 제59조(근로시간 및 휴게시간의 특례) 적용]
+            </div>
+
+            <div style="font-weight:700;margin-bottom:6px;">4. 임금</div>
+            <div style="margin-bottom:12px;padding-left:8px;color:var(--text-2);" id="ct-wage-block">
+              시급 : <span id="ct-hourly">12,384원</span> (주휴수당 포함)<br>
+              일급 : <span id="ct-base-pay">99,072원</span><br>
+              → 주휴수당은 시급에 포함되어 지급되며, 근로기준법에 준하여 적용한다.
+            </div>
+
+            <div style="font-weight:700;margin-bottom:6px;">5. 연차 휴가</div>
+            <div style="margin-bottom:12px;padding-left:8px;color:var(--text-2);">
+              → 연차 휴가는 근로기준법 제60조에 따라 발생 시 지급한다.
+            </div>
+
+            <div style="font-weight:700;margin-bottom:6px;">6. 근로관계 종료</div>
+            <div style="margin-bottom:12px;padding-left:8px;color:var(--text-2);">
+              → 일용직 근로의 특성상 마지막 근로일로부터 7일 이내에 새로운 일용근로계약이 체결되지 아니하는 경우에는 마지막 근로일로 근로관계가 종료된 것으로 본다.
+            </div>
+
+            <div style="font-weight:700;margin-bottom:6px;">7. 계약 해지</div>
+            <div style="margin-bottom:12px;padding-left:8px;color:var(--text-2);">
+              계약기간 도중이라도 다음 각호에 1에 해당하는 경우 즉시 해지할 수 있다.<br>
+              · 취업규칙 및 정당한 업무상의 규정 및 명령을 위반한 경우<br>
+              · 허위사실 유포, 비방 등 회사 명예를 실추시킨 경우
+            </div>
+
+            <div style="font-weight:700;margin-bottom:6px;">8. 개인정보 수집 동의</div>
+            <div style="margin-bottom:12px;padding-left:8px;color:var(--text-2);">
+              → 개인정보 : 근로계약, 4대보험 가입목적 및 공공기관 신고목적으로 사용하고, 퇴직 후 3년간 보관 후 파기한다.<br>
+              → 시간외 근로 동의 : 업무 특성상 시간외 근로가 발생할 수 있으며, 이에 동의한다.
+            </div>
+
+            <div style="font-weight:700;margin-bottom:6px;">9. 계약서 교부 확인</div>
+            <div style="margin-bottom:16px;padding-left:8px;color:var(--text-2);">
+              → 회사는 근로자에게 근로계약서를 교부하며, 근로자는 이를 확인(동의)한다.
+            </div>
+
+            <!-- 급여 계좌 -->
+            <div style="background:var(--bg);border-radius:10px;padding:12px;margin-bottom:16px;">
+              <div style="font-size:11px;font-weight:700;color:var(--text-2);margin-bottom:8px;">10. 급여 수령 계좌 (내 정보 &gt; 급여계좌에서 등록)</div>
+              <div style="font-size:12px;color:var(--text-2);line-height:1.9;">
+                예금주 : <b style="color:var(--text)" id="ct-bank-name">김진호</b><br>
+                은행 : <b style="color:var(--text)" id="ct-bank">하나은행</b><br>
+                계좌번호 : <b style="color:var(--text)" id="ct-account">1234567890123</b>
+              </div>
+            </div>
+
+            <div style="text-align:center;font-size:12px;color:var(--text-2);margin-bottom:6px;" id="ct-sign-date">2026년 3월 17일</div>
+
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:20px;">
+              <div style="text-align:center;">
+                <div style="font-weight:700;margin-bottom:2px;">[회사]</div>
+                <div style="color:var(--text-2);">비안웨딩㈜</div>
+                <div style="color:var(--text-2);">대표 SHIN CHAE HYANG</div>
+              </div>
+              <div style="text-align:center;">
+                <div style="font-weight:700;margin-bottom:2px;">[근로자]</div>
+                <div style="color:var(--text-2);" id="ct-worker-name">김진호</div>
+              </div>
+            </div>
+
           </div>
-          <button class="sign-clear-btn" onclick="clearSign('contract')">서명 지우기</button>
-          <button class="full-btn" onclick="completeCheckin()">서명 완료 · 출근 확인</button>
+
+          <!-- 서명 영역 (고정 하단) -->
+          <div style="padding:16px 20px 32px;border-top:1px solid var(--border);flex-shrink:0;background:white;">
+            <div style="font-size:12px;font-weight:700;color:var(--text-2);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.3px;">✍️ 근로자 서명</div>
+            <div class="sign-canvas-wrap">
+              <canvas id="sign-canvas-contract" width="320" height="90"
+                ontouchstart="startSign(event,'contract')" ontouchmove="drawSign(event,'contract')" ontouchend="endSign('contract')"
+                onmousedown="startSign(event,'contract')" onmousemove="drawSign(event,'contract')" onmouseup="endSign('contract')"
+                style="touch-action:none; cursor:crosshair; width:100%;"></canvas>
+            </div>
+            <button class="sign-clear-btn" onclick="clearSign('contract')">서명 지우기</button>
+            <button class="full-btn" onclick="completeCheckin()">서명 완료 · 출근 확인</button>
+          </div>
+
         </div>
       </div>
     </div>
@@ -1824,80 +2024,282 @@
       <div class="header-title" style="color:white;">알바 찾기</div>
       <div style="width:60px;"></div>
     </div>
+
+    <!-- 분류 필터 탭 -->
+    <div style="background:white; border-bottom:1px solid var(--border); padding:0 16px; display:flex; gap:0; flex-shrink:0; overflow-x:auto;">
+      <button class="filter-tab active" onclick="filterVenue(this,'all')" data-venue="all">전체</button>
+      <button class="filter-tab" onclick="filterVenue(this,'ltower')" data-venue="ltower">L타워</button>
+      <button class="filter-tab" onclick="filterVenue(this,'whills')" data-venue="whills">W힐스</button>
+      <button class="filter-tab" onclick="filterVenue(this,'gonjiam')" data-venue="gonjiam">곤지암</button>
+    </div>
+
     <div class="scroll-content">
-      <div style="padding:16px 16px 8px; font-size:13px; color:var(--text-2);">
-        현재 모집중인 공고 <b style="color:var(--primary);">3개</b>
+      <div style="padding:12px 16px 4px; font-size:12px; color:var(--text-2);">
+        모집중인 공고 <b id="job-count" style="color:var(--primary);">11개</b>
       </div>
+      <div id="job-listing">
 
-      <!-- L타워 -->
-      <div class="job-card" onclick="showScreen('screen-job-ltower')">
-        <div class="job-card-header">
-          <div class="shop-icon blue" style="font-size:22px; width:48px; height:48px;">🏛️</div>
-          <div style="flex:1;">
-            <div class="job-title">L타워 웨딩홀</div>
-            <div class="job-shop">웨딩홀 서빙 · 서울</div>
-          </div>
-          <span class="job-badge badge-open">모집중</span>
-        </div>
-        <div class="job-card-body">
-          <div class="job-meta">
-            <span class="job-tag">🚇 지하철 이동</span>
-            <span class="job-tag">👔 단정한 복장</span>
-          </div>
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
-            <div style="font-size:13px; font-weight:700; color:var(--primary);">협의 후 결정</div>
-            <div style="font-size:11px; color:var(--text-2);">👨 남 5명 · 👩 여 5명 모집</div>
-          </div>
-        </div>
-      </div>
+        <!-- ─── 3/17 (월) ─────────────── -->
+        <div class="date-group-label">3월 17일 (월)</div>
 
-      <!-- W힐스 -->
-      <div class="job-card" onclick="showScreen('screen-job-whills')">
-        <div class="job-card-header">
-          <div class="shop-icon purple" style="font-size:22px; width:48px; height:48px;">🏔️</div>
-          <div style="flex:1;">
-            <div class="job-title">W힐스 웨딩홀</div>
-            <div class="job-shop">웨딩홀 서빙 · 경기</div>
+        <div class="job-card job-item" data-venue="ltower" onclick="showScreen('screen-job-ltower')">
+          <div class="job-card-header">
+            <div class="shop-icon blue">🏛️</div>
+            <div style="flex:1;">
+              <div class="job-title">L타워 웨딩홀</div>
+              <div class="job-shop">웨딩홀 서빙 · 서울 강남</div>
+            </div>
+            <span class="job-badge badge-open">모집중</span>
           </div>
-          <span class="job-badge badge-open">모집중</span>
+          <div class="job-card-body">
+            <div class="job-meta">
+              <span class="job-tag">🚇 지하철</span>
+              <span class="job-tag">⏰ 09:00–18:00</span>
+              <span class="job-tag">👔 단정한 복장</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
+              <div class="job-pay">12,384원 <span>/시간</span></div>
+              <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:11px;color:var(--text-2);">👨 남 3명 · 👩 여 3명</span><span class="job-point-tag">+2,000P</span></div>
+            </div>
+          </div>
         </div>
-        <div class="job-card-body">
-          <div class="job-meta">
-            <span class="job-tag">🚇 지하철 이동</span>
-            <span class="job-tag">👔 단정한 복장</span>
-          </div>
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
-            <div style="font-size:13px; font-weight:700; color:#8e44ad;">협의 후 결정</div>
-            <div style="font-size:11px; color:var(--text-2);">👨 남 4명 · 👩 여 6명 모집</div>
-          </div>
-        </div>
-      </div>
 
-      <!-- 곤지암 -->
-      <div class="job-card" onclick="showScreen('screen-job-gonjiam')">
-        <div class="job-card-header">
-          <div class="shop-icon green" style="font-size:22px; width:48px; height:48px; background:#e8f5e9;">📦</div>
-          <div style="flex:1;">
-            <div class="job-title">곤지암 택배물류허브</div>
-            <div class="job-shop">택배 물류 분류 · 경기 광주</div>
+        <div class="job-card job-item" data-venue="whills" onclick="showScreen('screen-job-whills')">
+          <div class="job-card-header">
+            <div class="shop-icon purple">🏔️</div>
+            <div style="flex:1;">
+              <div class="job-title">W힐스 웨딩홀</div>
+              <div class="job-shop">웨딩홀 서빙 · 경기 성남</div>
+            </div>
+            <span class="job-badge badge-open">모집중</span>
           </div>
-          <span class="job-badge badge-open">모집중</span>
+          <div class="job-card-body">
+            <div class="job-meta">
+              <span class="job-tag">🚇 지하철</span>
+              <span class="job-tag">⏰ 10:00–19:00</span>
+              <span class="job-tag">👔 단정한 복장</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
+              <div class="job-pay">12,384원 <span>/시간</span></div>
+              <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:11px;color:var(--text-2);">👨 남 2명 · 👩 여 4명</span><span class="job-point-tag">+2,000P</span></div>
+            </div>
+          </div>
         </div>
-        <div class="job-card-body">
-          <div class="job-meta">
-            <span class="job-tag">🚌 통근버스 제공</span>
-            <span class="job-tag">👟 편한 복장</span>
+
+        <!-- ─── 3/18 (화) ─────────────── -->
+        <div class="date-group-label">3월 18일 (화)</div>
+
+        <div class="job-card job-item" data-venue="gonjiam" onclick="showScreen('screen-job-gonjiam')">
+          <div class="job-card-header">
+            <div class="shop-icon green">📦</div>
+            <div style="flex:1;">
+              <div class="job-title">곤지암 택배물류허브</div>
+              <div class="job-shop">물류 분류 · 경기 광주 <span style="color:var(--danger);font-weight:700;">야간</span></div>
+            </div>
+            <span class="job-badge badge-open">모집중</span>
           </div>
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
-            <div style="font-size:13px; font-weight:700; color:#27ae60;">협의 후 결정</div>
-            <div style="font-size:11px; color:var(--text-2);">👨 남 10명 · 👩 여 10명 모집</div>
+          <div class="job-card-body">
+            <div class="job-meta">
+              <span class="job-tag">🚌 통근버스</span>
+              <span class="job-tag">⏰ 22:00–06:00</span>
+              <span class="job-tag" style="color:var(--danger);background:rgba(255,59,48,0.08);">🌙 야간</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
+              <div class="job-pay">18,000원 <span>/시간</span></div>
+              <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:11px;color:var(--text-2);">👨 남 8명 · 👩 여 8명</span><span class="job-point-tag">+1,000P</span></div>
+            </div>
           </div>
         </div>
+
+        <div class="job-card job-item" data-venue="ltower" onclick="showScreen('screen-job-ltower')">
+          <div class="job-card-header">
+            <div class="shop-icon blue">🏛️</div>
+            <div style="flex:1;">
+              <div class="job-title">L타워 웨딩홀</div>
+              <div class="job-shop">웨딩홀 서빙 · 서울 강남</div>
+            </div>
+            <span class="job-badge badge-open">모집중</span>
+          </div>
+          <div class="job-card-body">
+            <div class="job-meta">
+              <span class="job-tag">🚇 지하철</span>
+              <span class="job-tag">⏰ 11:00–20:00</span>
+              <span class="job-tag">👔 단정한 복장</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
+              <div class="job-pay">12,384원 <span>/시간</span></div>
+              <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:11px;color:var(--text-2);">👨 남 4명 · 👩 여 4명</span><span class="job-point-tag">+2,000P</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─── 3/19 (수) ─────────────── -->
+        <div class="date-group-label">3월 19일 (수)</div>
+
+        <div class="job-card job-item" data-venue="gonjiam" onclick="showScreen('screen-job-gonjiam')">
+          <div class="job-card-header">
+            <div class="shop-icon green">📦</div>
+            <div style="flex:1;">
+              <div class="job-title">곤지암 택배물류허브</div>
+              <div class="job-shop">물류 분류 · 경기 광주 <span style="color:var(--danger);font-weight:700;">야간</span></div>
+            </div>
+            <span class="job-badge badge-open">모집중</span>
+          </div>
+          <div class="job-card-body">
+            <div class="job-meta">
+              <span class="job-tag">🚌 통근버스</span>
+              <span class="job-tag">⏰ 22:00–06:00</span>
+              <span class="job-tag" style="color:var(--danger);background:rgba(255,59,48,0.08);">🌙 야간</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
+              <div class="job-pay">18,000원 <span>/시간</span></div>
+              <div style="font-size:11px;color:var(--text-2);"><span style="font-size:11px;color:var(--text-2);">👨 남 10명 · 👩 여 10명</span><span class="job-point-tag">+1,000P</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="job-card job-item" data-venue="whills" onclick="showScreen('screen-job-whills')">
+          <div class="job-card-header">
+            <div class="shop-icon purple">🏔️</div>
+            <div style="flex:1;">
+              <div class="job-title">W힐스 웨딩홀</div>
+              <div class="job-shop">웨딩홀 서빙 · 경기 성남</div>
+            </div>
+            <span class="job-badge badge-open">모집중</span>
+          </div>
+          <div class="job-card-body">
+            <div class="job-meta">
+              <span class="job-tag">🚇 지하철</span>
+              <span class="job-tag">⏰ 09:00–18:00</span>
+              <span class="job-tag">👔 단정한 복장</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
+              <div class="job-pay">12,384원 <span>/시간</span></div>
+              <div style="font-size:11px;color:var(--text-2);"><span style="font-size:11px;color:var(--text-2);">👨 남 3명 · 👩 여 5명</span><span class="job-point-tag">+2,000P</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─── 3/21 (금) ─────────────── -->
+        <div class="date-group-label">3월 21일 (금)</div>
+
+        <div class="job-card job-item" data-venue="ltower" onclick="showScreen('screen-job-ltower')">
+          <div class="job-card-header">
+            <div class="shop-icon blue">🏛️</div>
+            <div style="flex:1;">
+              <div class="job-title">L타워 웨딩홀</div>
+              <div class="job-shop">웨딩홀 서빙 · 서울 강남</div>
+            </div>
+            <span class="job-badge badge-open">모집중</span>
+          </div>
+          <div class="job-card-body">
+            <div class="job-meta">
+              <span class="job-tag">🚇 지하철</span>
+              <span class="job-tag">⏰ 09:00–18:00</span>
+              <span class="job-tag">👔 단정한 복장</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
+              <div class="job-pay">12,384원 <span>/시간</span></div>
+              <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:11px;color:var(--text-2);">👨 남 5명 · 👩 여 5명</span><span class="job-point-tag">+2,000P</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="job-card job-item" data-venue="whills" onclick="showScreen('screen-job-whills')">
+          <div class="job-card-header">
+            <div class="shop-icon purple">🏔️</div>
+            <div style="flex:1;">
+              <div class="job-title">W힐스 웨딩홀</div>
+              <div class="job-shop">웨딩홀 서빙 · 경기 성남</div>
+            </div>
+            <span class="job-badge badge-open">모집중</span>
+          </div>
+          <div class="job-card-body">
+            <div class="job-meta">
+              <span class="job-tag">🚇 지하철</span>
+              <span class="job-tag">⏰ 10:00–19:00</span>
+              <span class="job-tag">👔 단정한 복장</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
+              <div class="job-pay">12,384원 <span>/시간</span></div>
+              <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:11px;color:var(--text-2);">👨 남 2명 · 👩 여 4명</span><span class="job-point-tag">+2,000P</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="job-card job-item" data-venue="gonjiam" onclick="showScreen('screen-job-gonjiam')">
+          <div class="job-card-header">
+            <div class="shop-icon green">📦</div>
+            <div style="flex:1;">
+              <div class="job-title">곤지암 택배물류허브</div>
+              <div class="job-shop">물류 분류 · 경기 광주 <span style="color:var(--danger);font-weight:700;">야간</span></div>
+            </div>
+            <span class="job-badge badge-open">모집중</span>
+          </div>
+          <div class="job-card-body">
+            <div class="job-meta">
+              <span class="job-tag">🚌 통근버스</span>
+              <span class="job-tag">⏰ 22:00–06:00</span>
+              <span class="job-tag" style="color:var(--danger);background:rgba(255,59,48,0.08);">🌙 야간</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
+              <div class="job-pay">18,000원 <span>/시간</span></div>
+              <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:11px;color:var(--text-2);">👨 남 8명 · 👩 여 8명</span><span class="job-point-tag">+1,000P</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─── 3/22 (토) ─────────────── -->
+        <div class="date-group-label">3월 22일 (토)</div>
+
+        <div class="job-card job-item" data-venue="ltower" onclick="showScreen('screen-job-ltower')">
+          <div class="job-card-header">
+            <div class="shop-icon blue">🏛️</div>
+            <div style="flex:1;">
+              <div class="job-title">L타워 웨딩홀</div>
+              <div class="job-shop">웨딩홀 서빙 · 서울 강남</div>
+            </div>
+            <span class="job-badge badge-open">모집중</span>
+          </div>
+          <div class="job-card-body">
+            <div class="job-meta">
+              <span class="job-tag">🚇 지하철</span>
+              <span class="job-tag">⏰ 09:00–18:00</span>
+              <span class="job-tag">👔 단정한 복장</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
+              <div class="job-pay">12,384원 <span>/시간</span></div>
+              <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:11px;color:var(--text-2);">👨 남 4명 · 👩 여 4명</span><span class="job-point-tag">+2,000P</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="job-card job-item" data-venue="whills" onclick="showScreen('screen-job-whills')">
+          <div class="job-card-header">
+            <div class="shop-icon purple">🏔️</div>
+            <div style="flex:1;">
+              <div class="job-title">W힐스 웨딩홀</div>
+              <div class="job-shop">웨딩홀 서빙 · 경기 성남</div>
+            </div>
+            <span class="job-badge badge-open">모집중</span>
+          </div>
+          <div class="job-card-body">
+            <div class="job-meta">
+              <span class="job-tag">🚇 지하철</span>
+              <span class="job-tag">⏰ 09:00–18:00</span>
+              <span class="job-tag">👔 단정한 복장</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
+              <div class="job-pay">12,384원 <span>/시간</span></div>
+              <div style="font-size:11px;color:var(--text-2);"><span style="font-size:11px;color:var(--text-2);">👨 남 3명 · 👩 여 5명</span><span class="job-point-tag">+2,000P</span></div>
+            </div>
+          </div>
+        </div>
+
       </div>
       <div style="height:16px;"></div>
     </div>
-
-    <div class="bottom-nav">
+        <div class="bottom-nav">
       <button class="nav-item" onclick="workerTab('main',this)"><span class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg></span><span class="nav-label">홈</span></button>
       <button class="nav-item active" onclick="workerTab('map',this)"><span class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg></span><span class="nav-label">알바 찾기</span></button>
       <button class="nav-item" onclick="workerTab('schedule',this)"><span class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span><span class="nav-label">스케줄</span></button>
@@ -1908,11 +2310,6 @@
 
   <!-- 공고 상세: L타워 -->
   <div id="screen-job-ltower" class="screen" style="display:none; flex-direction:column;">
-    <div class="header" style="background:var(--primary); flex-shrink:0;">
-      <button class="icon-btn" onclick="showScreen('screen-worker-map')" style="color:white;">←</button>
-      <div class="header-title" style="color:white;">L타워 웨딩홀</div>
-      <div style="width:36px;"></div>
-    </div>
     <!-- 상단: 지도 -->
     <div style="height:220px; flex-shrink:0; position:relative; background:#e8eaf0;">
       <div id="map-ltower" style="width:100%; height:100%;"></div>
@@ -1920,6 +2317,8 @@
         <div style="font-size:36px;">📍</div>
         <div style="background:white; border-radius:20px; padding:4px 12px; font-size:12px; font-weight:700; margin-top:4px; box-shadow:0 2px 8px rgba(0,0,0,0.15);">L타워 · 서울 강남구</div>
       </div>
+      <button class="map-back-btn" onclick="showScreen('screen-worker-map')">←</button>
+      <div style="position:absolute;top:12px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.45);backdrop-filter:blur(6px);color:white;font-size:13px;font-weight:700;padding:5px 14px;border-radius:20px;pointer-events:none;">L타워 웨딩홀</div>
     </div>
     <!-- 하단: 공고정보 스크롤 -->
     <div class="scroll-content" style="flex:1;">
@@ -1929,7 +2328,7 @@
           <div style="display:flex; flex-direction:column; gap:10px;">
             <div style="display:flex; justify-content:space-between; font-size:13px;">
               <span style="color:var(--text-2);">시급</span>
-              <span style="font-weight:700; color:var(--primary);">협의 후 결정</span>
+              <span style="font-weight:700; color:var(--primary);">12,384원 (주휴수당 포함)</span>
             </div>
             <div style="display:flex; justify-content:space-between; font-size:13px;">
               <span style="color:var(--text-2);">모집 인원</span>
@@ -1965,7 +2364,7 @@
             <div>· 귀걸이 등 액세서리 착용 금지</div>
           </div>
         </div>
-        <button class="full-btn" onclick="showToast('✅ 신청이 완료되었어요! 확인 후 연락드릴게요.')">신청하기</button>
+        <button class="full-btn" onclick="applyJob(this)">신청하기</button>
         <div style="height:16px;"></div>
       </div>
     </div>
@@ -1973,17 +2372,14 @@
 
   <!-- 공고 상세: W힐스 -->
   <div id="screen-job-whills" class="screen" style="display:none; flex-direction:column;">
-    <div class="header" style="background:#8e44ad; flex-shrink:0;">
-      <button class="icon-btn" onclick="showScreen('screen-worker-map')" style="color:white;">←</button>
-      <div class="header-title" style="color:white;">W힐스 웨딩홀</div>
-      <div style="width:36px;"></div>
-    </div>
     <!-- 상단: 지도 -->
     <div style="height:220px; flex-shrink:0; position:relative; background:#e8eaf0;">
       <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; flex-direction:column;">
         <div style="font-size:36px;">🏔️</div>
         <div style="background:white; border-radius:20px; padding:4px 12px; font-size:12px; font-weight:700; margin-top:4px; box-shadow:0 2px 8px rgba(0,0,0,0.15);">W힐스 · 경기 성남시</div>
       </div>
+      <button class="map-back-btn" onclick="showScreen('screen-worker-map')">←</button>
+      <div style="position:absolute;top:12px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.45);backdrop-filter:blur(6px);color:white;font-size:13px;font-weight:700;padding:5px 14px;border-radius:20px;pointer-events:none;">W힐스 웨딩홀</div>
     </div>
     <div class="scroll-content" style="flex:1;">
       <div style="background:#8e44ad; padding:0 20px 24px; color:white;">
@@ -1997,7 +2393,7 @@
           <div style="display:flex; flex-direction:column; gap:10px;">
             <div style="display:flex; justify-content:space-between; font-size:13px;">
               <span style="color:var(--text-2);">시급</span>
-              <span style="font-weight:700; color:#8e44ad;">협의 후 결정</span>
+              <span style="font-weight:700; color:#8e44ad;">12,384원 (주휴수당 포함)</span>
             </div>
             <div style="display:flex; justify-content:space-between; font-size:13px;">
               <span style="color:var(--text-2);">근무 시간</span>
@@ -2029,24 +2425,21 @@
             <div>· 귀걸이 등 액세서리 착용 금지</div>
           </div>
         </div>
-        <button class="full-btn" style="background:#8e44ad;" onclick="showToast('✅ 신청이 완료되었어요! 확인 후 연락드릴게요.')">신청하기</button>
+        <button class="full-btn" style="background:#8e44ad;" onclick="applyJob(this)">신청하기</button>
       </div>
     </div>
   </div>
 
   <!-- 공고 상세: 곤지암 -->
   <div id="screen-job-gonjiam" class="screen" style="display:none; flex-direction:column;">
-    <div class="header" style="background:#27ae60; flex-shrink:0;">
-      <button class="icon-btn" onclick="showScreen('screen-worker-map')" style="color:white;">←</button>
-      <div class="header-title" style="color:white;">곤지암 택배물류허브</div>
-      <div style="width:36px;"></div>
-    </div>
     <!-- 상단: 지도 -->
     <div style="height:220px; flex-shrink:0; position:relative; background:#e8eaf0;">
       <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; flex-direction:column;">
         <div style="font-size:36px;">📦</div>
         <div style="background:white; border-radius:20px; padding:4px 12px; font-size:12px; font-weight:700; margin-top:4px; box-shadow:0 2px 8px rgba(0,0,0,0.15);">곤지암 허브 · 경기 광주시 곤지암읍</div>
       </div>
+      <button class="map-back-btn" onclick="showScreen('screen-worker-map')">←</button>
+      <div style="position:absolute;top:12px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.45);backdrop-filter:blur(6px);color:white;font-size:13px;font-weight:700;padding:5px 14px;border-radius:20px;pointer-events:none;">곤지암 택배물류허브</div>
     </div>
     <div class="scroll-content" style="flex:1;">
       <div style="background:#27ae60; padding:0 20px 24px; color:white;">
@@ -2060,7 +2453,7 @@
           <div style="display:flex; flex-direction:column; gap:10px;">
             <div style="display:flex; justify-content:space-between; font-size:13px;">
               <span style="color:var(--text-2);">시급</span>
-              <span style="font-weight:700; color:#27ae60;">협의 후 결정</span>
+              <span style="font-weight:700; color:#27ae60;">18,000원 (주휴수당 포함)</span>
             </div>
             <div style="display:flex; justify-content:space-between; font-size:13px;">
               <span style="color:var(--text-2);">근무 내용</span>
@@ -2096,7 +2489,7 @@
             <div>· 버스 탑승 5분 전 대기 필수</div>
           </div>
         </div>
-        <button class="full-btn" style="background:#27ae60;" onclick="showToast('✅ 신청이 완료되었어요! 확인 후 연락드릴게요.')">신청하기</button>
+        <button class="full-btn" style="background:#27ae60;" onclick="applyJob(this)">신청하기</button>
       </div>
     </div>
   </div>
@@ -2756,10 +3149,78 @@
     input.value = v.slice(0, 10);
   }
 
+  // 가입 시 입력한 개인정보 (실제 구현 시 백엔드에서 받아옴)
+  const userInfo = {
+    name:    '김진호',
+    birth:   '2000.01.01',
+    phone:   '010-1234-5678',
+    addr:    '서울 강남구',
+    bank:    '하나은행',
+    account: '1234567890123',
+    accountName: '김진호',
+  };
+
+  // 사장님이 설정한 공고별 시급 (실제 구현 시 사장님앱 DB에서 받아옴)
+  const jobWages = {
+    'L타워 웨딩홀':      { hourly: 12384, hours: 8 },
+    'W힐스 웨딩홀':      { hourly: 12384, hours: 8 },
+    '곤지암 택배물류허브': { hourly: 18000, hours: 8 },
+  };
+
+  // 시급 → 일급/주휴수당 계산
+  function calcWage(hourly, hours) {
+    const basePay = hourly * hours;
+    return { hourly, basePay, weeklyPay: 0 };
+  }
+
+  // 핸드폰번호 자동 하이픈
+  function formatPhone(input) {
+    let v = input.value.replace(/[^0-9]/g, '');
+    if (v.length <= 3) input.value = v;
+    else if (v.length <= 7) input.value = v.slice(0,3) + '-' + v.slice(3);
+    else input.value = v.slice(0,3) + '-' + v.slice(3,7) + '-' + v.slice(7,11);
+  }
+
+  // 회원가입 저장 후 다음 화면
+  function saveSignupAndNext() {
+    const phone = document.getElementById('signup-phone')?.value;
+    const bank = document.getElementById('signup-bank')?.value;
+    const account = document.getElementById('signup-account')?.value;
+    const accountName = document.getElementById('signup-account-name')?.value;
+    if (phone) userInfo.phone = phone;
+    if (bank) userInfo.bank = bank;
+    if (account) userInfo.account = account;
+    if (accountName) userInfo.accountName = accountName;
+    showScreen('screen-agree');
+  }
+
   // 출근 버튼
   let currentCheckinId = '';
+  let currentCheckinJob = '';
   function doCheckin(btnId, jobName) {
     currentCheckinId = btnId;
+    currentCheckinJob = jobName;
+
+    // 개인정보 자동 입력
+    const today = new Date();
+    const dateStr = `${today.getFullYear()}년 ${today.getMonth()+1}월 ${today.getDate()}일`;
+    document.getElementById('ct-date').textContent = dateStr;
+    document.getElementById('ct-sign-date').textContent = dateStr;
+    document.getElementById('ct-name').textContent = userInfo.name;
+    document.getElementById('ct-birth').textContent = userInfo.birth;
+    document.getElementById('ct-phone').textContent = userInfo.phone;
+    document.getElementById('ct-addr').textContent = userInfo.addr;
+    document.getElementById('ct-worker-name').textContent = userInfo.name;
+    document.getElementById('ct-bank-name').textContent = userInfo.accountName;
+    document.getElementById('ct-bank').textContent    = userInfo.bank;
+    document.getElementById('ct-account').textContent = userInfo.account;
+
+    // 시급 자동 계산
+    const wage = jobWages[jobName] || { hourly: 10320, hours: 8 };
+    const w = calcWage(wage.hourly, wage.hours);
+    document.getElementById('ct-hourly').textContent   = w.hourly.toLocaleString() + '원';
+    document.getElementById('ct-base-pay').textContent = w.basePay.toLocaleString() + '원';
+
     // 근로계약서 모달 표시
     const overlay = document.getElementById('contract-modal-overlay');
     overlay.style.display = 'flex';
@@ -2809,6 +3270,95 @@
     // 선택된 날짜 하이라이트
     document.querySelectorAll('#screen-worker-schedule .cal-day').forEach(d => d.classList.remove('selected'));
     event.target.classList.add('selected');
+  }
+
+  // 알바찾기 장소 필터
+  function filterVenue(btn, venue) {
+    // 탭 활성화
+    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+
+    const items = document.querySelectorAll('.job-item');
+    const labels = document.querySelectorAll('.date-group-label');
+    
+    if (venue === 'all') {
+      items.forEach(el => el.style.display = '');
+      labels.forEach(el => el.style.display = '');
+    } else {
+      items.forEach(el => {
+        el.style.display = el.dataset.venue === venue ? '' : 'none';
+      });
+      // 날짜 라벨: 해당 날짜 그룹에 보이는 아이템이 하나라도 있으면 표시
+      labels.forEach(label => {
+        let next = label.nextElementSibling;
+        let hasVisible = false;
+        while (next && !next.classList.contains('date-group-label')) {
+          if (next.classList.contains('job-item') && next.style.display !== 'none') {
+            hasVisible = true;
+            break;
+          }
+          next = next.nextElementSibling;
+        }
+        label.style.display = hasVisible ? '' : 'none';
+      });
+    }
+
+    // 카운트 업데이트
+    const count = venue === 'all'
+      ? items.length
+      : [...items].filter(el => el.dataset.venue === venue).length;
+    const countEl = document.getElementById('job-count');
+    if (countEl) countEl.textContent = count + '개';
+  }
+
+  // 사장님이 시급 변경 시 jobWages 업데이트
+  function updateJobWage(val) {
+    const hourly = parseInt(val);
+    Object.keys(jobWages).forEach(k => { jobWages[k].hourly = hourly; });
+    showToast('✅ 시급이 ' + hourly.toLocaleString() + '원으로 설정됐어요. 계약서에 자동 반영됩니다.');
+  }
+
+  // 신청한 공고 추적
+  const appliedVenues = new Set();
+
+  function applyJob(btn) {
+    // 현재 어떤 상세화면인지 파악
+    const screen = btn.closest('.screen');
+    const screenId = screen.id; // screen-job-ltower / whills / gonjiam
+    const venueMap = {
+      'screen-job-ltower': 'ltower',
+      'screen-job-whills': 'whills',
+      'screen-job-gonjiam': 'gonjiam',
+    };
+    const venue = venueMap[screenId];
+
+    // 버튼 → 신청완료 상태로
+    btn.textContent = '신청완료 ✓';
+    btn.style.background = 'var(--bg)';
+    btn.style.color = 'var(--text-3)';
+    btn.disabled = true;
+
+    if (venue) {
+      appliedVenues.add(venue);
+      updateAppliedBadges();
+    }
+
+    showToast('✅ 신청 완료! 승인 후 홈에서 확인하세요.');
+    setTimeout(() => workerTab('map', null), 1000);
+  }
+
+  function updateAppliedBadges() {
+    // 알바찾기 카드 목록에서 신청한 공고 뱃지 업데이트
+    document.querySelectorAll('.job-item').forEach(card => {
+      const venue = card.dataset.venue;
+      if (appliedVenues.has(venue)) {
+        const badge = card.querySelector('.job-badge');
+        if (badge) {
+          badge.textContent = '신청중';
+          badge.className = 'job-badge badge-applied';
+        }
+      }
+    });
   }
 </script>
 </body>
