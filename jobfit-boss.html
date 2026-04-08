@@ -2,1157 +2,1653 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>잡핏 사장님</title>
-<link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1B3A6B">
+<title>잡핏 관리자</title>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+
+<!-- SheetJS for Excel export -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
 <style>
-:root{
-  --accent:#FF5C35;--navy:#0F1923;--navy2:#1E2D3D;
-  --bg:#F5F5F7;--card:#fff;--text:#0F1923;--text2:#6B7684;--text3:#B0BAC4;
-  --border:#ECEEF0;--ok:#00C471;--warn:#F5A623;--err:#FF3B30;
-  --sh:0 2px 8px rgba(0,0,0,0.07);
+:root {
+  --color-deep-navy: #1B3A6B;
+  --color-indigo: #1E40AF;
+  --color-royal: #2563EB;
+  --color-cyan: #0EA5E9;
+  --color-ice: #E8F1FF;
+  --color-sub-text: #6B7684;
+  --color-bg: #F5F7FA;
+  --color-white: #FFFFFF;
+  --color-danger: #EF4444;
+  --color-success: #22C55E;
+  --color-warning: #F59E0B;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-html,body{height:100%;background:#E8E8EC;display:flex;align-items:center;justify-content:center;font-family:'Pretendard',-apple-system,sans-serif;}
-.frame{width:390px;height:844px;border-radius:48px;overflow:hidden;position:relative;display:flex;flex-direction:column;box-shadow:0 32px 80px rgba(0,0,0,.5);}
-.sb{height:44px;background:var(--navy);display:flex;align-items:center;justify-content:space-between;padding:0 24px;font-size:12px;font-weight:600;color:#fff;flex-shrink:0;position:relative;z-index:100;}
-.notch{width:120px;height:30px;background:#000;border-radius:0 0 20px 20px;position:absolute;top:0;left:50%;transform:translateX(-50%);}
-.pg{display:none;flex-direction:column;flex:1;overflow:hidden;}
-.pg.on{display:flex;}
-.sc{flex:1;overflow-y:auto;padding-bottom:80px;}
-.sc::-webkit-scrollbar{display:none;}
-.bnav{height:68px;display:flex;background:#fff;border-top:1px solid var(--border);flex-shrink:0;}
-.ni{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:none;border:none;cursor:pointer;position:relative;}
-.ni svg{stroke:var(--text3);transition:stroke .15s;}
-.ni span{font-size:10px;font-weight:500;color:var(--text3);}
-.ni.on svg{stroke:var(--accent);}
-.ni.on span{color:var(--accent);font-weight:700;}
-.nb{position:absolute;top:4px;right:8px;min-width:16px;height:16px;background:var(--err);color:#fff;font-size:9px;font-weight:700;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 3px;}
-.st{font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;padding:18px 20px 10px;}
-.card{background:#fff;border-radius:16px;padding:16px;margin:0 16px 10px;box-shadow:var(--sh);}
-.btn-full{width:100%;padding:15px;background:var(--accent);color:#fff;border:none;border-radius:16px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;}
-.btn-ok{padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;border:none;cursor:pointer;background:var(--accent);color:#fff;}
-.btn-no{padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;border:none;cursor:pointer;background:var(--bg);color:var(--text2);}
-#toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--navy);color:#fff;padding:12px 20px;border-radius:100px;font-size:13px;font-weight:600;white-space:nowrap;opacity:0;transition:all .25s;z-index:9999;pointer-events:none;}
-#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
-/* ── LOGIN ── */
-#pg-login{background:var(--navy);}
-.linner{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 28px;}
-.logo{font-size:40px;font-weight:800;color:#fff;letter-spacing:-1.5px;margin-bottom:4px;}
-.lbl{font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px;align-self:flex-start;}
-.linput{width:100%;padding:14px 16px;background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.12);border-radius:10px;color:#fff;font-size:15px;font-family:inherit;outline:none;margin-bottom:12px;}
-.linput:focus{border-color:var(--accent);}
-.linput::placeholder{color:rgba(255,255,255,.2);}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
-/* ── HOME HERO ── */
-.hero{background:var(--navy);padding:20px 20px 24px;flex-shrink:0;}
-.hero-greet{font-size:13px;color:rgba(255,255,255,.4);}
-.hero-name{font-size:22px;font-weight:800;color:#fff;margin-top:2px;letter-spacing:-.5px;}
-.hero-date{font-size:11px;color:rgba(255,255,255,.3);margin-top:4px;}
-.sgrid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-top:16px;}
-.sbox{background:rgba(255,255,255,.08);border-radius:12px;padding:10px;text-align:center;}
-.snum{font-size:20px;font-weight:800;color:#fff;}
-.snum.c-acc{color:var(--accent);}
-.snum.c-ok{color:var(--ok);}
-.snum.c-err{color:var(--err);}
-.slbl{font-size:9px;color:rgba(255,255,255,.4);margin-top:2px;font-weight:500;}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-deep-navy);
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+}
 
-/* APPLICANT ROW */
-.arow{display:flex;align-items:flex-start;gap:10px;padding:12px 0;border-bottom:1px solid var(--border);}
-.arow:last-child{border-bottom:none;}
-.avatar{width:38px;height:38px;background:var(--bg);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;margin-top:2px;}
-.ainfo{flex:1;}
-.aname{font-size:14px;font-weight:700;color:var(--text);}
-.asub{font-size:11px;color:var(--text2);margin-top:2px;}
-.astar{font-size:11px;color:var(--warn);margin-top:2px;}
-.ajob{display:inline-flex;align-items:center;gap:4px;background:var(--bg);border-radius:6px;padding:3px 8px;font-size:11px;font-weight:600;color:var(--text2);margin-top:5px;}
+.screen { display: none; flex-direction: column; min-height: 100vh; }
+.screen.active { display: flex; }
 
-/* VENUE ROW (홈 공고현황) */
-.vrow{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--border);}
-.vrow:last-child{border-bottom:none;}
-.vicon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
-.vi-b{background:#EEF2FF;}.vi-p{background:#F5EEFF;}.vi-g{background:#EDFAF3;}
-.vname{font-size:13px;font-weight:700;color:var(--text);}
-.vdate{font-size:11px;color:var(--text2);margin-top:1px;}
-.vprog{margin-top:5px;background:var(--bg);border-radius:4px;height:4px;overflow:hidden;}
-.vbar{height:100%;border-radius:4px;background:var(--accent);}
-.bdg-ok{background:rgba(0,196,113,.1);color:var(--ok);font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;}
-.bdg-cl{background:var(--bg);color:var(--text3);font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;}
+/* SPLASH */
+#screen-splash {
+  background: linear-gradient(135deg, var(--color-deep-navy), var(--color-indigo));
+  align-items: center; justify-content: center; gap: 10px;
+}
+.splash-logo { font-size: 42px; font-weight: 800; color: #fff; }
+.splash-sub { font-size: 14px; color: rgba(255,255,255,0.7); }
+.splash-spinner { width: 28px; height: 28px; border: 3px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; margin-top: 16px; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
-/* FILTER */
-.frow{display:flex;gap:6px;padding:10px 16px 4px;overflow-x:auto;flex-shrink:0;}
-.frow::-webkit-scrollbar{display:none;}
-.fc{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;border:1.5px solid var(--border);background:#fff;color:var(--text2);cursor:pointer;white-space:nowrap;flex-shrink:0;}
-.fc.on{background:var(--navy);color:#fff;border-color:var(--navy);}
+/* MAINTENANCE / UPDATE */
+#screen-maintenance, #screen-update {
+  align-items: center; justify-content: center;
+  padding: 32px; text-align: center; background: #fff;
+}
+.maint-icon { font-size: 56px; margin-bottom: 12px; }
+.maint-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+.maint-msg { font-size: 14px; color: var(--color-sub-text); line-height: 1.6; }
 
-/* DATE GROUP */
-.dg-label{font-size:12px;font-weight:700;color:var(--text2);padding:14px 20px 6px;text-transform:uppercase;letter-spacing:.3px;}
+/* LOGIN */
+#screen-login {
+  background: linear-gradient(160deg, var(--color-deep-navy) 0%, var(--color-indigo) 60%, var(--color-bg) 100%);
+  align-items: center; justify-content: center;
+}
+.login-hero { padding: 40px 24px 24px; text-align: center; }
+.login-logo-boss { font-size: 34px; font-weight: 800; color: #fff; }
+.login-badge { background: rgba(255,255,255,0.2); color: #fff; font-size: 12px; padding: 4px 12px; border-radius: 20px; display: inline-block; margin-top: 6px; }
+.login-card { background: #fff; border-radius: 24px 24px 0 0; padding: 28px 24px 40px; width: 100%; flex: 1; }
+.login-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
 
-/* JOB LIST CARD (홈 공고현황) */
-.jlcard{background:#fff;border-radius:14px;margin:0 16px 8px;box-shadow:var(--sh);overflow:hidden;cursor:pointer;transition:transform .1s;}
-.jlcard:active{transform:scale(.99);}
-.jlcard-top{display:flex;align-items:center;gap:10px;padding:12px 14px 10px;}
-.jlcard-info{flex:1;}
-.jlcard-title{font-size:14px;font-weight:700;color:var(--text);}
-.jlcard-date{font-size:12px;color:var(--text2);margin-top:2px;}
-.jlcard-body{padding:0 14px 12px;display:flex;gap:12px;}
-.jlstat{text-align:center;}
-.jlstat-num{font-size:15px;font-weight:800;color:var(--accent);}
-.jlstat-lbl{font-size:10px;color:var(--text2);margin-top:1px;}
-.jlstat-lbl span{font-size:9px;}
-.bdg-wait{background:rgba(245,166,35,.12);color:var(--warn);font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;}
+/* FORM */
+.form-group { margin-bottom: 16px; }
+.form-label { font-size: 13px; font-weight: 600; color: var(--color-sub-text); margin-bottom: 6px; display: block; }
+.form-input {
+  width: 100%; height: 48px;
+  border: 1.5px solid #E2E8F0; border-radius: 10px;
+  padding: 0 14px; font-size: 15px; color: var(--color-deep-navy);
+  background: #fff; outline: none; transition: border-color 0.2s;
+}
+.form-input:focus { border-color: var(--color-royal); }
+.form-select {
+  width: 100%; height: 48px;
+  border: 1.5px solid #E2E8F0; border-radius: 10px;
+  padding: 0 14px; font-size: 15px; color: var(--color-deep-navy);
+  background: #fff; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7684' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center;
+  outline: none; cursor: pointer;
+}
+textarea.form-input { height: auto; min-height: 100px; padding: 12px 14px; resize: none; }
 
-/* ── 공고 탭 ── */
-.job-header{background:var(--navy);padding:20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
-.jh-title{font-size:18px;font-weight:800;color:#fff;}
-.add-btn{background:var(--accent);color:#fff;border:none;border-radius:20px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;}
+/* BUTTONS */
+.btn-primary { width: 100%; height: 52px; background: var(--color-royal); color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; transition: opacity 0.2s; }
+.btn-primary:active { opacity: 0.85; }
+.btn-primary:disabled { background: #CBD5E1; cursor: not-allowed; }
+.btn-secondary { width: 100%; height: 48px; background: var(--color-ice); color: var(--color-royal); border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.btn-danger-outline { background: #fff; color: var(--color-danger); border: 1.5px solid var(--color-danger); border-radius: 8px; padding: 0 14px; height: 36px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.btn-sm { height: 34px; padding: 0 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; white-space: nowrap; }
+.btn-sm-primary { background: var(--color-royal); color: #fff; }
+.btn-sm-success { background: var(--color-success); color: #fff; }
+.btn-sm-danger { background: var(--color-danger); color: #fff; }
+.btn-sm-outline { background: #fff; color: var(--color-royal); border: 1.5px solid var(--color-royal); border-radius: 8px; padding: 0 12px; height: 34px; font-size: 12px; font-weight: 600; cursor: pointer; }
+.btn-sm-warning { background: var(--color-warning); color: #fff; }
+.btn-icon { background: none; border: none; cursor: pointer; font-size: 20px; padding: 4px; }
 
-/* TOGGLE */
-.tog{width:44px;height:26px;border-radius:13px;border:none;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;}
-.tog.on{background:var(--ok);}
-.tog.off{background:var(--text3);}
-.tok{position:absolute;top:3px;width:20px;height:20px;background:#fff;border-radius:50%;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,.2);}
-.tog.on .tok{left:21px;}
-.tog.off .tok{left:3px;}
+/* HEADER */
+.app-header {
+  background: var(--color-deep-navy); padding: 14px 20px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 20;
+}
+.app-logo { font-size: 18px; font-weight: 800; color: #fff; }
+.admin-badge { background: rgba(255,255,255,0.2); color: #fff; font-size: 11px; padding: 2px 8px; border-radius: 10px; margin-left: 8px; }
+.back-btn { font-size: 22px; cursor: pointer; color: #fff; background: none; border: none; padding: 4px; }
 
-/* JOB MANAGE CARD */
-.jmc{background:#fff;border-radius:16px;margin:0 16px 10px;box-shadow:var(--sh);overflow:hidden;cursor:pointer;}
-.jmt{display:flex;align-items:center;gap:10px;padding:12px 14px 10px;}
-.jmb{padding:0 14px 12px;}
-.jm-title{font-size:14px;font-weight:700;color:var(--text);}
-.jm-date{font-size:12px;color:var(--accent);font-weight:600;margin-top:2px;}
-.jm-stats{display:flex;gap:0;margin-top:8px;}
-.jmstat{flex:1;text-align:center;border-right:1px solid var(--border);padding:6px 0;}
-.jmstat:last-child{border-right:none;}
-.jmstat-num{font-size:15px;font-weight:800;color:var(--text);}
-.jmstat-num.c-ok{color:var(--ok);}
-.jmstat-num.c-warn{color:var(--warn);}
-.jmstat-lbl{font-size:9px;color:var(--text2);margin-top:2px;}
-.jmc-arrow{font-size:16px;color:var(--text3);margin-left:4px;}
+/* NAV */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 480px;
+  background: #fff; border-top: 1px solid #e8ecf0;
+  display: flex; padding-bottom: var(--safe-bottom); z-index: 100;
+}
+.nav-item {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 10px 0 8px; cursor: pointer;
+  color: #94a3b8; font-size: 10px; gap: 3px;
+  background: none; border: none; transition: color 0.2s;
+}
+.nav-item .nav-icon { font-size: 20px; line-height: 1; }
+.nav-item.active { color: var(--color-royal); }
+.tab-content { flex: 1; overflow-y: auto; padding-bottom: calc(70px + var(--safe-bottom)); }
 
-/* ── 스케줄 탭 ── */
-.sch-header{background:var(--navy);padding:20px;flex-shrink:0;}
-.sch-title{font-size:18px;font-weight:800;color:#fff;}
-.calwrap{background:#fff;border-radius:16px;padding:16px;margin:0 16px 12px;box-shadow:var(--sh);}
-.calh{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
-.calm{font-size:16px;font-weight:800;color:var(--text);}
-.caln{background:var(--bg);border:none;width:28px;height:28px;border-radius:8px;font-size:14px;cursor:pointer;color:var(--text2);margin-left:4px;}
-.cald{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
-.cdlbl{text-align:center;font-size:11px;font-weight:700;color:var(--text3);padding:4px 0;}
-.cdlbl.sun{color:var(--err);}
-.cd{text-align:center;font-size:13px;font-weight:500;padding:8px 4px;border-radius:8px;cursor:pointer;color:var(--text);position:relative;transition:background .1s;}
-.cd:hover{background:var(--bg);}
-.cd.today{background:var(--accent);color:#fff;font-weight:800;}
-.cd.sun{color:var(--err);}
-.cd.emp{cursor:default;}
-.cd.has::after{content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--accent);}
-.cd.sel2{background:var(--navy);color:#fff;}
-.swr{display:flex;align-items:center;gap:10px;background:#fff;border-radius:10px;padding:11px 13px;margin-bottom:7px;box-shadow:var(--sh);}
-.sw-st{font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;flex-shrink:0;}
-.st-ok{background:rgba(0,196,113,.1);color:var(--ok);}
-.st-pend{background:rgba(245,166,35,.12);color:var(--warn);}
-.st-abs{background:rgba(255,59,48,.1);color:var(--err);}
+/* CARDS */
+.card { background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); padding: 16px; margin-bottom: 12px; }
+.section-title { font-size: 16px; font-weight: 700; margin-bottom: 12px; }
 
-/* ── 근무자 탭 ── */
-.wk-header{background:var(--navy);padding:20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
-.wkcard{background:#fff;border-radius:14px;margin:0 16px 8px;box-shadow:var(--sh);overflow:hidden;}
-.wkt{display:flex;align-items:center;gap:10px;padding:12px 14px 10px;}
-.wkav{width:42px;height:42px;background:var(--bg);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
-.wk-name{font-size:14px;font-weight:700;color:var(--text);}
-.wk-meta{font-size:11px;color:var(--text2);margin-top:2px;}
-.wk-rat{font-size:11px;color:var(--warn);margin-top:2px;}
-.wkbot{border-top:1px solid var(--border);padding:9px 14px;display:flex;align-items:center;justify-content:space-between;}
-.bdg-app{background:rgba(0,196,113,.1);color:var(--ok);font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;}
-.bdg-rej{background:rgba(255,59,48,.1);color:var(--err);font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;}
+/* DASHBOARD */
+.dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.dash-card {
+  background: #fff; border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  padding: 14px; text-align: center;
+}
+.dash-label { font-size: 11px; color: var(--color-sub-text); margin-bottom: 4px; }
+.dash-value { font-size: 28px; font-weight: 800; color: var(--color-deep-navy); }
+.dash-sub { font-size: 11px; color: var(--color-sub-text); margin-top: 2px; }
+.dash-detail { display: flex; justify-content: space-around; padding: 10px; background: var(--color-ice); border-radius: 10px; margin-bottom: 12px; }
+.dash-detail-item { text-align: center; }
+.dash-detail-label { font-size: 11px; color: var(--color-sub-text); }
+.dash-detail-value { font-size: 16px; font-weight: 700; margin-top: 2px; }
 
-/* MODAL */
-.moverlay{display:none;position:absolute;inset:0;background:rgba(0,0,0,.5);z-index:500;align-items:flex-end;}
-.msheet{background:#fff;border-radius:24px 24px 0 0;width:100%;max-height:92%;overflow-y:auto;padding:20px 20px 40px;}
-.msheet::-webkit-scrollbar{display:none;}
-.mhandle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px;}
-.mtitle{font-size:17px;font-weight:800;color:var(--text);margin-bottom:4px;}
-.msub{font-size:13px;color:var(--text2);margin-bottom:20px;}
-.flbl{font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.3px;margin-bottom:7px;}
-.finput{width:100%;padding:13px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;outline:none;margin-bottom:16px;background:var(--bg);}
-.finput:focus{border-color:var(--accent);background:#fff;}
-.dchips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
-.dc{padding:7px 14px;border-radius:20px;font-size:12px;font-weight:600;border:1.5px solid var(--border);background:#fff;color:var(--text2);cursor:pointer;}
-.dc.sel{background:var(--accent);color:#fff;border-color:var(--accent);}
-.finput-row{display:flex;gap:10px;margin-bottom:16px;}
-.finput-row .finput{margin-bottom:0;}
-.sel{border:1.5px solid var(--accent);border-radius:8px;padding:7px 10px;font-size:13px;font-weight:700;color:var(--accent);background:#fff;font-family:inherit;}
+/* STATUS BADGES */
+.badge { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 6px; white-space: nowrap; }
+.badge-pending { background: #FEF3C7; color: #92400E; }
+.badge-approved { background: #D1FAE5; color: #065F46; }
+.badge-rejected { background: #FEE2E2; color: #991B1B; }
+.badge-open { background: #DBEAFE; color: #1E40AF; }
+.badge-closed { background: #F1F5F9; color: #475569; }
+.badge-urgent { background: #FEE2E2; color: #991B1B; }
+.badge-no-gps { background: #F3F4F6; color: #6B7280; }
+.badge-gps-ok { background: #D1FAE5; color: #065F46; }
+.badge-absent { background: #FEE2E2; color: #991B1B; }
+.badge-owner { background: var(--color-ice); color: var(--color-royal); }
 
-/* 공고 상세 화면 */
-.detail-header{background:var(--navy);padding:14px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0;}
-.back-btn{width:32px;height:32px;background:rgba(255,255,255,.12);border:none;border-radius:10px;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.detail-hero{background:var(--navy);padding:0 20px 20px;}
-.detail-title{font-size:18px;font-weight:800;color:#fff;}
-.detail-date{font-size:13px;color:rgba(255,255,255,.5);margin-top:2px;}
-.detail-stats{display:flex;gap:10px;margin-top:14px;}
-.dsbox{flex:1;background:rgba(255,255,255,.08);border-radius:12px;padding:10px;text-align:center;}
-.dsnum{font-size:18px;font-weight:800;color:#fff;}
-.dslbl{font-size:9px;color:rgba(255,255,255,.4);margin-top:2px;}
-svg{display:block;}
+/* APPLICATION ITEM */
+.app-item {
+  padding: 14px 16px; border-bottom: 1px solid #f1f5f9;
+  display: flex; align-items: flex-start; gap: 12px;
+}
+.app-item:last-child { border-bottom: none; }
+.app-item-info { flex: 1; min-width: 0; }
+.app-item-name { font-size: 14px; font-weight: 700; }
+.app-item-meta { font-size: 12px; color: var(--color-sub-text); margin-top: 2px; }
+.app-item-actions { display: flex; gap: 6px; flex-shrink: 0; }
 
-  /* 멤버 카드 */
-  .member-card {
-    background:#fff; border-radius:16px; margin:0 16px 10px;
-    box-shadow:var(--sh); overflow:hidden; transition:transform .1s;
-  }
-  .member-card.ace { border-left:4px solid #F5A623; }
-  .member-top { display:flex; align-items:center; gap:12px; padding:14px 14px 10px; }
-  .member-av { width:44px; height:44px; background:var(--bg); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; position:relative; }
-  .ace-badge { position:absolute; bottom:-2px; right:-2px; font-size:13px; }
-  .member-name { font-size:15px; font-weight:800; color:var(--text); }
-  .member-venue { font-size:11px; color:var(--text2); margin-top:2px; }
-  .member-stat-row { display:flex; gap:0; border-top:1px solid var(--border); }
-  .mstat { flex:1; text-align:center; padding:9px 4px; border-right:1px solid var(--border); }
-  .mstat:last-child { border-right:none; }
-  .mstat-num { font-size:15px; font-weight:800; }
-  .mstat-lbl { font-size:9px; color:var(--text2); margin-top:2px; font-weight:500; }
-  .mstat-num.c-ok  { color:var(--ok); }
-  .mstat-num.c-err { color:var(--err); }
-  .mstat-num.c-acc { color:var(--accent); }
-  .member-schedule { padding:8px 14px 12px; font-size:11px; color:var(--text2); background:var(--bg); border-top:1px solid var(--border); }
-  .member-schedule b { color:var(--text); font-weight:600; }
-  .ace-star-btn { background:none; border:none; cursor:pointer; font-size:18px; padding:2px 6px; }
-  .ace-label { display:inline-flex; align-items:center; gap:3px; font-size:10px; font-weight:800; color:#F5A623; background:rgba(245,166,35,.12); padding:3px 8px; border-radius:20px; }
+/* JOB LIST */
+.job-admin-card {
+  background: #fff; border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  padding: 14px; margin-bottom: 10px;
+}
+.job-admin-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.job-admin-title { font-size: 15px; font-weight: 700; flex: 1; }
+.job-admin-meta { font-size: 12px; color: var(--color-sub-text); margin-bottom: 8px; }
+.job-admin-footer { display: flex; justify-content: space-between; align-items: center; }
+.job-admin-wage { font-size: 15px; font-weight: 700; }
+.job-admin-count { font-size: 12px; color: var(--color-sub-text); }
+.job-actions { display: flex; gap: 6px; }
 
-  /* 위치 지도 */
-  .map-section { margin-bottom:16px; }
-  .map-box {
-    width:100%; height:180px; border-radius:12px; overflow:hidden;
-    background:#e8eaf0; position:relative; border:1.5px solid var(--border);
-  }
-  #reg-kakao-map { width:100%; height:100%; }
-  .map-guide {
-    position:absolute; inset:0; display:flex; flex-direction:column;
-    align-items:center; justify-content:center; gap:6px;
-    background:#e8eaf0; pointer-events:none;
-  }
-  .map-guide.hidden { display:none; }
-  .map-search-row { display:flex; gap:8px; margin-bottom:8px; }
-  .map-search-input {
-    flex:1; padding:11px 14px; border:1.5px solid var(--border);
-    border-radius:10px; font-size:13px; font-family:inherit; outline:none;
-    background:var(--bg);
-  }
-  .map-search-input:focus { border-color:var(--accent); }
-  .map-search-btn {
-    padding:11px 16px; background:var(--accent); color:#fff;
-    border:none; border-radius:10px; font-size:13px; font-weight:700;
-    cursor:pointer; white-space:nowrap;
-  }
-  .map-addr-display {
-    font-size:12px; color:var(--text2); margin-top:6px;
-    padding:8px 12px; background:var(--bg); border-radius:8px;
-    min-height:32px; display:flex; align-items:center; gap:6px;
-  }
-  .map-addr-display b { color:var(--text); font-weight:600; }
-  .map-reset-btn {
-    background:none; border:none; color:var(--text3); font-size:11px;
-    cursor:pointer; text-decoration:underline; margin-top:4px;
-  }
+/* WORKER ITEM */
+.worker-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px; background: #fff;
+  border-bottom: 1px solid #f1f5f9; cursor: pointer;
+}
+.worker-item:last-child { border-bottom: none; }
+.worker-avatar { width: 44px; height: 44px; border-radius: 50%; background: var(--color-ice); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+.worker-info { flex: 1; min-width: 0; }
+.worker-name { font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+.worker-stats { font-size: 12px; color: var(--color-sub-text); margin-top: 2px; }
+.ace-tag { font-size: 10px; background: #FEF3C7; color: #92400E; padding: 2px 6px; border-radius: 4px; font-weight: 700; }
+.ban-tag { font-size: 10px; background: #FEE2E2; color: #991B1B; padding: 2px 6px; border-radius: 4px; font-weight: 700; }
+.warning-tag { font-size: 10px; background: #FEF3C7; color: #D97706; padding: 2px 6px; border-radius: 4px; font-weight: 700; }
+
+/* ATTENDANCE STATUS */
+.att-status { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; }
+.att-gps-ok { color: var(--color-success); }
+.att-moving { color: var(--color-sub-text); }
+.att-absent { color: var(--color-danger); }
+.att-waiting { color: var(--color-warning); }
+
+/* DETAIL SCREENS */
+.detail-header {
+  background: var(--color-deep-navy); padding: 14px 20px;
+  display: flex; align-items: center; gap: 12px;
+  position: sticky; top: 0; z-index: 20;
+}
+.detail-header-title { font-size: 17px; font-weight: 700; color: #fff; flex: 1; }
+.detail-body { padding: 16px; flex: 1; overflow-y: auto; padding-bottom: 20px; }
+
+/* WORKER DETAIL */
+.worker-detail-header {
+  background: linear-gradient(135deg, var(--color-deep-navy), var(--color-royal));
+  border-radius: 14px; padding: 20px; color: #fff;
+  display: flex; align-items: center; gap: 16px; margin-bottom: 16px;
+}
+.wd-avatar { width: 56px; height: 56px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 26px; }
+.wd-name { font-size: 20px; font-weight: 800; }
+.wd-sub { font-size: 12px; opacity: 0.8; margin-top: 2px; }
+.stat-row { display: flex; gap: 8px; margin-top: 8px; }
+.stat-chip { background: rgba(255,255,255,0.2); border-radius: 8px; padding: 4px 10px; font-size: 12px; }
+
+/* FORM / JOB FORM */
+.form-section { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+.form-section-title { font-size: 15px; font-weight: 700; margin-bottom: 14px; color: var(--color-deep-navy); }
+
+/* INQUIRY */
+.inquiry-item {
+  background: #fff; border-radius: 10px; padding: 14px; margin-bottom: 8px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.inquiry-meta { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
+.inquiry-status { font-size: 11px; padding: 2px 7px; border-radius: 5px; font-weight: 600; }
+.status-open { background: #FEF3C7; color: #92400E; }
+.status-replied { background: #D1FAE5; color: #065F46; }
+
+/* SETTLEMENT */
+.settle-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.settle-table th { background: var(--color-deep-navy); color: #fff; padding: 8px 6px; text-align: left; }
+.settle-table td { padding: 8px 6px; border-bottom: 1px solid #f1f5f9; }
+.settle-table tr:last-child td { border-bottom: none; }
+.settle-table tr:nth-child(even) td { background: #f8fafc; }
+.settle-total { background: var(--color-ice); border-radius: 10px; padding: 12px; display: flex; justify-content: space-between; margin-top: 10px; }
+.settle-total-label { font-size: 14px; font-weight: 600; }
+.settle-total-value { font-size: 16px; font-weight: 800; color: var(--color-royal); }
+
+/* SCHEDULE CALENDAR */
+.calendar-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.cal-month { font-size: 16px; font-weight: 700; }
+.cal-nav { background: none; border: none; font-size: 22px; cursor: pointer; padding: 4px 8px; }
+.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.cal-dow { text-align: center; font-size: 11px; color: var(--color-sub-text); padding: 6px 0; font-weight: 600; }
+.cal-day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 8px; cursor: pointer; font-size: 12px; position: relative; }
+.cal-day.today { background: var(--color-royal); color: #fff; font-weight: 700; }
+.cal-day.has-event::after { content: ''; position: absolute; bottom: 2px; width: 4px; height: 4px; border-radius: 50%; background: var(--color-cyan); }
+.cal-day.today.has-event::after { background: rgba(255,255,255,0.8); }
+.cal-day.other-month { color: #cbd5e1; }
+.cal-day:hover { background: var(--color-ice); }
+
+/* MODAL / POPUP */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; display: flex; align-items: flex-end; }
+.modal-sheet { background: #fff; width: 100%; border-radius: 20px 20px 0 0; padding: 24px 20px calc(20px + var(--safe-bottom)); max-height: 90vh; overflow-y: auto; }
+.modal-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; text-align: center; }
+.popup-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 300; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.popup-box { background: #fff; border-radius: 16px; padding: 24px; width: 100%; max-width: 320px; }
+.popup-title { font-size: 17px; font-weight: 700; text-align: center; margin-bottom: 10px; }
+.popup-desc { font-size: 14px; color: var(--color-sub-text); text-align: center; line-height: 1.5; margin-bottom: 20px; }
+.popup-btns { display: flex; gap: 10px; }
+.popup-btns button { flex: 1; height: 48px; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; border: none; }
+.popup-cancel { background: #f1f5f9; color: var(--color-deep-navy); }
+.popup-confirm { background: var(--color-royal); color: #fff; }
+.popup-confirm-danger { background: var(--color-danger); color: #fff; }
+
+.toast { position: fixed; bottom: calc(80px + var(--safe-bottom)); left: 50%; transform: translateX(-50%); background: #1e293b; color: #fff; padding: 12px 20px; border-radius: 50px; font-size: 14px; font-weight: 500; z-index: 500; white-space: nowrap; animation: toastIn 0.3s ease, toastOut 0.3s ease 2.2s forwards; pointer-events: none; }
+@keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+@keyframes toastOut { to { opacity: 0; } }
+
+.empty-state { text-align: center; padding: 40px 24px; color: var(--color-sub-text); }
+.empty-icon { font-size: 44px; margin-bottom: 10px; }
+.empty-msg { font-size: 14px; }
+.loading-wrap { display: flex; justify-content: center; padding: 32px; }
+.loading-spinner { width: 26px; height: 26px; border: 3px solid #e2e8f0; border-top-color: var(--color-royal); border-radius: 50%; animation: spin 0.8s linear infinite; }
+::-webkit-scrollbar { width: 0; }
 </style>
-<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=4f478e9f00aaf4d8b3432db26f3d1aa2&libraries=services"></script>
 </head>
 <body>
-<div class="frame">
-  <div class="sb">
-    <div class="notch"></div>
-    <span>9:41</span>
-    <span>●●● 📶 🔋</span>
+
+<!-- MAINTENANCE -->
+<div id="screen-maintenance" class="screen">
+  <div class="maint-icon">🔧</div>
+  <div class="maint-title">서버 점검 중</div>
+  <div class="maint-msg" id="maint-msg">잠시 후 다시 이용해주세요.</div>
+</div>
+
+<!-- UPDATE -->
+<div id="screen-update" class="screen">
+  <div class="maint-icon">🆕</div>
+  <div class="maint-title">업데이트가 필요합니다</div>
+  <div class="maint-msg">최신 버전으로 업데이트 후 이용해주세요.</div>
+  <button class="btn-primary" style="margin:24px" onclick="window.location.reload()">새로고침</button>
+</div>
+
+<!-- SPLASH -->
+<div id="screen-splash" class="screen active">
+  <div class="splash-logo">잡핏 관리자</div>
+  <div class="splash-sub">Boss Dashboard</div>
+  <div class="splash-spinner"></div>
+</div>
+
+<!-- LOGIN -->
+<div id="screen-login" class="screen">
+  <div class="login-hero">
+    <div class="login-logo-boss">잡핏 관리자</div>
+    <div class="login-badge">Boss Dashboard</div>
   </div>
-
-  <!-- ══ 로그인 ══ -->
-  <div id="pg-login" class="pg on">
-    <div class="linner">
-      <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.3);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">JOBFIT BOSS</div>
-      <div class="logo">잡핏</div>
-      <div style="font-size:13px;color:rgba(255,255,255,.3);margin-bottom:48px;">사장님 전용 관리앱</div>
-      <div style="width:100%">
-        <div class="lbl">아이디</div>
-        <input class="linput" id="lid" type="text" placeholder="아무거나 입력하세요">
-        <div class="lbl">비밀번호</div>
-        <input class="linput" id="lpw" type="password" placeholder="아무거나 입력하세요">
-        <button class="btn-full" onclick="doLogin()">로그인</button>
-        <div style="font-size:11px;color:rgba(255,255,255,.2);margin-top:12px;text-align:center;">테스트용 — 아무 값이나 입력</div>
-      </div>
+  <div class="login-card">
+    <div class="login-title">관리자 로그인</div>
+    <div class="form-group">
+      <label class="form-label">아이디</label>
+      <input class="form-input" id="login-id" type="text" placeholder="아이디 입력" autocomplete="username">
     </div>
+    <div class="form-group">
+      <label class="form-label">비밀번호</label>
+      <input class="form-input" id="login-pw" type="password" placeholder="비밀번호 입력" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div id="login-error" style="color:var(--color-danger);font-size:13px;margin-bottom:12px;display:none;"></div>
+    <button class="btn-primary" onclick="doLogin()">로그인</button>
   </div>
+</div>
 
-  <!-- ══ 홈 ══ -->
-  <div id="pg-home" class="pg">
-    <div class="hero">
-      <div class="hero-greet">안녕하세요 👋</div>
-      <div class="hero-name">고춘성 사장님</div>
-      <div class="hero-date" id="hdate"></div>
-      <div class="sgrid">
-        <div class="sbox"><div class="snum">8</div><div class="slbl">출근 예정</div></div>
-        <div class="sbox"><div class="snum c-ok">5</div><div class="slbl">출근 완료</div></div>
-        <div class="sbox"><div class="snum c-err">1</div><div class="slbl">결근</div></div>
-        <div class="sbox"><div class="snum c-acc" id="pc">3</div><div class="slbl">승인 대기</div></div>
-      </div>
+<!-- HOME (DASHBOARD) -->
+<div id="screen-home" class="screen">
+  <div class="app-header">
+    <div>
+      <span class="app-logo">잡핏</span>
+      <span class="admin-badge" id="admin-role-badge">관리자</span>
     </div>
-    <div class="sc">
-      <div class="st">⏳ 승인 대기</div>
-      <div class="card" id="plist">
-        <div class="arow" id="ar1">
-          <div class="avatar">🧑</div>
-          <div class="ainfo">
-            <div class="aname">김남돈</div>
-            <div class="astar">★★★★★ 5.0 · 8회 근무</div>
-            <div class="ajob">🏛️ L타워 웨딩홀 · 3/21 (금) 09:00–18:00</div>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0">
-            <button class="btn-ok" onclick="appv('ar1',true)">승인</button>
-            <button class="btn-no" onclick="appv('ar1',false)">거절</button>
-          </div>
-        </div>
-        <div class="arow" id="ar2">
-          <div class="avatar">👩</div>
-          <div class="ainfo">
-            <div class="aname">이성기</div>
-            <div class="astar">★★★☆☆ 3.2 · 3회 근무</div>
-            <div class="ajob">🏔️ W힐스 웨딩홀 · 3/22 (토) 09:00–18:00</div>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0">
-            <button class="btn-ok" onclick="appv('ar2',true)">승인</button>
-            <button class="btn-no" onclick="appv('ar2',false)">거절</button>
-          </div>
-        </div>
-        <div class="arow" id="ar3">
-          <div class="avatar">🧑</div>
-          <div class="ainfo">
-            <div class="aname">박민준</div>
-            <div class="astar">★★★★☆ 4.1 · 5회 근무</div>
-            <div class="ajob">📦 곤지암 허브 · 3/17 (월) 22:00–06:00</div>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0">
-            <button class="btn-ok" onclick="appv('ar3',true)">승인</button>
-            <button class="btn-no" onclick="appv('ar3',false)">거절</button>
-          </div>
-        </div>
-        <div id="pempty" style="display:none;text-align:center;padding:20px 0;color:var(--text3);font-size:13px;">대기 중인 신청이 없어요 ✅</div>
-      </div>
-
-      <div class="st">📌 공고 현황</div>
-      <div class="frow" id="home-filter">
-        <button class="fc on" onclick="homeFilter(this,'all')">전체</button>
-        <button class="fc" onclick="homeFilter(this,'ltower')">L타워</button>
-        <button class="fc" onclick="homeFilter(this,'whills')">W힐스</button>
-        <button class="fc" onclick="homeFilter(this,'gonjiam')">곤지암</button>
-      </div>
-
-      <div id="home-job-list">
-        <!-- 3/17 -->
-        <div class="dg-label">3월 17일 (월)</div>
-        <div class="jlcard" data-v="ltower" onclick="openDetail('ltower','3월 17일 (월)','09:00–18:00')">
-          <div class="jlcard-top">
-            <div class="vicon vi-b">🏛️</div>
-            <div class="jlcard-info"><div class="jlcard-title">L타워 웨딩홀</div><div class="jlcard-date">3/17 (월) 09:00–18:00</div></div>
-            <span class="bdg-ok">모집중</span>
-          </div>
-          <div class="jlcard-body">
-            <div class="jlstat"><div class="jlstat-num">5/3</div><div class="jlstat-lbl">👨 남<span> 모집/승인</span></div></div>
-            <div class="jlstat"><div class="jlstat-num">5/2</div><div class="jlstat-lbl">👩 여<span> 모집/승인</span></div></div>
-            <div class="jlstat"><div class="jlstat-num" style="color:var(--warn)">1</div><div class="jlstat-lbl">승인 대기</div></div>
-          </div>
-        </div>
-        <div class="jlcard" data-v="gonjiam" onclick="openDetail('gonjiam','3월 17일 (월)','22:00–06:00')">
-          <div class="jlcard-top">
-            <div class="vicon vi-g">📦</div>
-            <div class="jlcard-info"><div class="jlcard-title">곤지암 택배물류허브</div><div class="jlcard-date">3/17 (월) 22:00–06:00</div></div>
-            <span class="bdg-ok">모집중</span>
-          </div>
-          <div class="jlcard-body">
-            <div class="jlstat"><div class="jlstat-num">10/8</div><div class="jlstat-lbl">👨 남<span> 모집/승인</span></div></div>
-            <div class="jlstat"><div class="jlstat-num">10/5</div><div class="jlstat-lbl">👩 여<span> 모집/승인</span></div></div>
-            <div class="jlstat"><div class="jlstat-num" style="color:var(--warn)">3</div><div class="jlstat-lbl">승인 대기</div></div>
-          </div>
-        </div>
-        <!-- 3/19 -->
-        <div class="dg-label">3월 19일 (수)</div>
-        <div class="jlcard" data-v="whills" onclick="openDetail('whills','3월 19일 (수)','09:00–18:00')">
-          <div class="jlcard-top">
-            <div class="vicon vi-p">🏔️</div>
-            <div class="jlcard-info"><div class="jlcard-title">W힐스 웨딩홀</div><div class="jlcard-date">3/19 (수) 09:00–18:00</div></div>
-            <span class="bdg-ok">모집중</span>
-          </div>
-          <div class="jlcard-body">
-            <div class="jlstat"><div class="jlstat-num">4/2</div><div class="jlstat-lbl">👨 남<span> 모집/승인</span></div></div>
-            <div class="jlstat"><div class="jlstat-num">4/3</div><div class="jlstat-lbl">👩 여<span> 모집/승인</span></div></div>
-            <div class="jlstat"><div class="jlstat-num" style="color:var(--warn)">1</div><div class="jlstat-lbl">승인 대기</div></div>
-          </div>
-        </div>
-        <!-- 3/21 -->
-        <div class="dg-label">3월 21일 (금)</div>
-        <div class="jlcard" data-v="ltower" onclick="openDetail('ltower','3월 21일 (금)','09:00–18:00')">
-          <div class="jlcard-top">
-            <div class="vicon vi-b">🏛️</div>
-            <div class="jlcard-info"><div class="jlcard-title">L타워 웨딩홀</div><div class="jlcard-date">3/21 (금) 09:00–18:00</div></div>
-            <span class="bdg-ok">모집중</span>
-          </div>
-          <div class="jlcard-body">
-            <div class="jlstat"><div class="jlstat-num">5/1</div><div class="jlstat-lbl">👨 남<span> 모집/승인</span></div></div>
-            <div class="jlstat"><div class="jlstat-num">5/0</div><div class="jlstat-lbl">👩 여<span> 모집/승인</span></div></div>
-            <div class="jlstat"><div class="jlstat-num" style="color:var(--warn)">1</div><div class="jlstat-lbl">승인 대기</div></div>
-          </div>
-        </div>
-        <!-- 3/22 -->
-        <div class="dg-label">3월 22일 (토)</div>
-        <div class="jlcard" data-v="whills" onclick="openDetail('whills','3월 22일 (토)','09:00–18:00')">
-          <div class="jlcard-top">
-            <div class="vicon vi-p">🏔️</div>
-            <div class="jlcard-info"><div class="jlcard-title">W힐스 웨딩홀</div><div class="jlcard-date">3/22 (토) 09:00–18:00</div></div>
-            <span class="bdg-ok">모집중</span>
-          </div>
-          <div class="jlcard-body">
-            <div class="jlstat"><div class="jlstat-num">4/1</div><div class="jlstat-lbl">👨 남<span> 모집/승인</span></div></div>
-            <div class="jlstat"><div class="jlstat-num">4/0</div><div class="jlstat-lbl">👩 여<span> 모집/승인</span></div></div>
-            <div class="jlstat"><div class="jlstat-num" style="color:var(--warn)">1</div><div class="jlstat-lbl">승인 대기</div></div>
-          </div>
-        </div>
-        <!-- 3/25 -->
-        <div class="dg-label">3월 25일 (화)</div>
-        <div class="jlcard" data-v="gonjiam" onclick="openDetail('gonjiam','3월 25일 (화)','22:00–06:00')">
-          <div class="jlcard-top">
-            <div class="vicon vi-g">📦</div>
-            <div class="jlcard-info"><div class="jlcard-title">곤지암 택배물류허브</div><div class="jlcard-date">3/25 (화) 22:00–06:00</div></div>
-            <span class="bdg-ok">모집중</span>
-          </div>
-          <div class="jlcard-body">
-            <div class="jlstat"><div class="jlstat-num">10/0</div><div class="jlstat-lbl">👨 남<span> 모집/승인</span></div></div>
-            <div class="jlstat"><div class="jlstat-num">10/0</div><div class="jlstat-lbl">👩 여<span> 모집/승인</span></div></div>
-            <div class="jlstat"><div class="jlstat-num" style="color:var(--warn)">0</div><div class="jlstat-lbl">승인 대기</div></div>
-          </div>
+    <button class="btn-icon" style="color:#fff;font-size:22px;" onclick="showScreen('noti-boss')">🔔</button>
+  </div>
+  <div class="tab-content">
+    <div style="padding:16px;">
+      <!-- 오늘 출근 현황 -->
+      <div class="card">
+        <div class="section-title">오늘 출근 현황</div>
+        <div class="dash-detail" id="dash-today-stats">
+          <div class="dash-detail-item"><div class="dash-detail-label">출근예정</div><div class="dash-detail-value" id="ds-total">-</div></div>
+          <div class="dash-detail-item"><div class="dash-detail-label">✅ GPS확인</div><div class="dash-detail-value" style="color:var(--color-success)" id="ds-gps">-</div></div>
+          <div class="dash-detail-item"><div class="dash-detail-label">📍 이동중</div><div class="dash-detail-value" style="color:var(--color-sub-text)" id="ds-moving">-</div></div>
+          <div class="dash-detail-item"><div class="dash-detail-label">❌ 결근</div><div class="dash-detail-value" style="color:var(--color-danger)" id="ds-absent">-</div></div>
         </div>
       </div>
-      <div style="height:8px"></div>
-    </div>
 
-    <div class="bnav">
-      <button class="ni on" onclick="go('home',this)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg><span>홈</span></button>
-      <button class="ni" onclick="go('jobs',this)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg><span>공고</span></button>
-      <button class="ni" onclick="go('schedule',this)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>스케줄</span></button>
-      <button class="ni" onclick="go('workers',this)" style="position:relative"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg><span>근무자</span><div class="nb" id="nb">3</div></button>
+      <!-- 대시보드 카드 -->
+      <div class="dash-grid">
+        <div class="dash-card">
+          <div class="dash-label">승인 대기</div>
+          <div class="dash-value" id="ds-pending">-</div>
+          <div class="dash-sub">건</div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-label">진행 중 공고</div>
+          <div class="dash-value" id="ds-jobs">-</div>
+          <div class="dash-sub">건</div>
+        </div>
+      </div>
+
+      <!-- 승인 대기 리스트 -->
+      <div class="section-title">승인 대기 신청</div>
+      <div class="card" id="pending-list">
+        <div class="loading-wrap"><div class="loading-spinner"></div></div>
+      </div>
     </div>
   </div>
+  <nav class="bottom-nav">
+    <button class="nav-item active" onclick="switchTab('home',this)"><span class="nav-icon">🏠</span>홈</button>
+    <button class="nav-item" onclick="switchTab('jobs',this)"><span class="nav-icon">📋</span>공고</button>
+    <button class="nav-item" onclick="switchTab('schedule',this)"><span class="nav-icon">📅</span>스케줄</button>
+    <button class="nav-item" onclick="switchTab('workers',this)"><span class="nav-icon">👥</span>근무자</button>
+    <button class="nav-item" onclick="switchTab('settle',this)"><span class="nav-icon">💰</span>정산</button>
+  </nav>
+</div>
 
-  <!-- ══ 공고 탭 ══ -->
-  <div id="pg-jobs" class="pg">
-    <div class="job-header">
-      <div class="jh-title">공고 관리</div>
-      <button class="add-btn" onclick="openRegModal()">+ 공고 등록</button>
+<!-- JOBS -->
+<div id="screen-jobs" class="screen">
+  <div class="app-header">
+    <div class="app-logo">공고 관리</div>
+    <button class="btn-icon" style="color:#fff;" onclick="openJobForm(null)">➕</button>
+  </div>
+  <div class="tab-content" style="padding:12px;" id="jobs-list">
+    <div class="loading-wrap"><div class="loading-spinner"></div></div>
+  </div>
+  <nav class="bottom-nav">
+    <button class="nav-item" onclick="switchTab('home',this)"><span class="nav-icon">🏠</span>홈</button>
+    <button class="nav-item active" onclick="switchTab('jobs',this)"><span class="nav-icon">📋</span>공고</button>
+    <button class="nav-item" onclick="switchTab('schedule',this)"><span class="nav-icon">📅</span>스케줄</button>
+    <button class="nav-item" onclick="switchTab('workers',this)"><span class="nav-icon">👥</span>근무자</button>
+    <button class="nav-item" onclick="switchTab('settle',this)"><span class="nav-icon">💰</span>정산</button>
+  </nav>
+</div>
+
+<!-- JOB FORM -->
+<div id="screen-job-form" class="screen">
+  <div class="detail-header">
+    <button class="back-btn" onclick="goBack()">←</button>
+    <div class="detail-header-title" id="job-form-title">공고 등록</div>
+  </div>
+  <div class="detail-body" style="padding-bottom:80px;">
+    <div class="form-section">
+      <div class="form-section-title">기본 정보</div>
+      <div class="form-group">
+        <label class="form-label">공고 제목 *</label>
+        <input class="form-input" id="jf-title" type="text" placeholder="예: L타워 웨딩홀 서빙 알바">
+      </div>
+      <div class="form-group">
+        <label class="form-label">거점 *</label>
+        <select class="form-select" id="jf-venue" onchange="autoFillVenue()">
+          <option value="">거점 선택</option>
+          <option value="ltower">L타워 웨딩홀</option>
+          <option value="whills">W힐스 웨딩홀</option>
+          <option value="gonjiam">곤지암 택배물류허브</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">날짜 *</label>
+        <input class="form-input" id="jf-date" type="date">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="form-group">
+          <label class="form-label">시작 시간 *</label>
+          <input class="form-input" id="jf-start" type="time">
+        </div>
+        <div class="form-group">
+          <label class="form-label">종료 시간 *</label>
+          <input class="form-input" id="jf-end" type="time">
+        </div>
+      </div>
     </div>
-    <div class="frow" style="background:#fff;border-bottom:1px solid var(--border);">
-      <button class="fc on" onclick="jobFilter(this,'all')">전체</button>
-      <button class="fc" onclick="jobFilter(this,'ltower')">L타워</button>
-      <button class="fc" onclick="jobFilter(this,'whills')">W힐스</button>
-      <button class="fc" onclick="jobFilter(this,'gonjiam')">곤지암</button>
+    <div class="form-section">
+      <div class="form-section-title">급여 & 인원</div>
+      <div class="form-group">
+        <label class="form-label">시급 (원) *</label>
+        <input class="form-input" id="jf-wage" type="number" inputmode="numeric" placeholder="12384">
+      </div>
+      <div class="form-group">
+        <label class="form-label">추가 포인트 (P)</label>
+        <input class="form-input" id="jf-bonus" type="number" inputmode="numeric" placeholder="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">모집 인원 *</label>
+        <input class="form-input" id="jf-max" type="number" inputmode="numeric" placeholder="10">
+      </div>
     </div>
-    <div class="sc">
-      <div style="height:10px"></div>
-
-      <!-- 3/17 (월) -->
-      <div class="dg-label" data-jv="ltower gonjiam">3월 17일 (월)</div>
-      <div class="jmc" data-jv="ltower" onclick="openDetail('ltower','3월 17일 (월)','09:00–18:00')">
-        <div class="jmt">
-          <div class="vicon vi-b">🏛️</div>
-          <div style="flex:1"><div class="jm-title">L타워 웨딩홀</div><div class="jm-date">3월 17일 (월)</div></div>
-          <span class="jmc-arrow">›</span>
-        </div>
-        <div class="jmb">
-          <div class="jm-stats">
-            <div class="jmstat"><div class="jmstat-num">5</div><div class="jmstat-lbl">👨 남 모집</div></div>
-            <div class="jmstat"><div class="jmstat-num c-ok">3</div><div class="jmstat-lbl">👨 승인</div></div>
-            <div class="jmstat"><div class="jmstat-num">5</div><div class="jmstat-lbl">👩 여 모집</div></div>
-            <div class="jmstat"><div class="jmstat-num c-ok">2</div><div class="jmstat-lbl">👩 승인</div></div>
-            <div class="jmstat"><div class="jmstat-num c-warn">1</div><div class="jmstat-lbl">대기</div></div>
-          </div>
-        </div>
+    <div class="form-section">
+      <div class="form-section-title">업무 내용</div>
+      <div class="form-group">
+        <textarea class="form-input" id="jf-desc" style="min-height:120px;" placeholder="업무 내용을 상세히 입력해주세요"></textarea>
       </div>
-      <div class="jmc" data-jv="gonjiam" onclick="openDetail('gonjiam','3월 17일 (월)','22:00–06:00')">
-        <div class="jmt">
-          <div class="vicon vi-g">📦</div>
-          <div style="flex:1"><div class="jm-title">곤지암 택배물류허브</div><div class="jm-date">3월 17일 (월) · 야간</div></div>
-          <span class="jmc-arrow">›</span>
-        </div>
-        <div class="jmb">
-          <div class="jm-stats">
-            <div class="jmstat"><div class="jmstat-num">10</div><div class="jmstat-lbl">👨 남 모집</div></div>
-            <div class="jmstat"><div class="jmstat-num c-ok">8</div><div class="jmstat-lbl">👨 승인</div></div>
-            <div class="jmstat"><div class="jmstat-num">10</div><div class="jmstat-lbl">👩 여 모집</div></div>
-            <div class="jmstat"><div class="jmstat-num c-ok">5</div><div class="jmstat-lbl">👩 승인</div></div>
-            <div class="jmstat"><div class="jmstat-num c-warn">3</div><div class="jmstat-lbl">대기</div></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 3/19 (수) -->
-      <div class="dg-label" data-jv="whills">3월 19일 (수)</div>
-      <div class="jmc" data-jv="whills" onclick="openDetail('whills','3월 19일 (수)','09:00–18:00')">
-        <div class="jmt">
-          <div class="vicon vi-p">🏔️</div>
-          <div style="flex:1"><div class="jm-title">W힐스 웨딩홀</div><div class="jm-date">3월 19일 (수)</div></div>
-          <span class="jmc-arrow">›</span>
-        </div>
-        <div class="jmb">
-          <div class="jm-stats">
-            <div class="jmstat"><div class="jmstat-num">4</div><div class="jmstat-lbl">👨 남 모집</div></div>
-            <div class="jmstat"><div class="jmstat-num c-ok">2</div><div class="jmstat-lbl">👨 승인</div></div>
-            <div class="jmstat"><div class="jmstat-num">4</div><div class="jmstat-lbl">👩 여 모집</div></div>
-            <div class="jmstat"><div class="jmstat-num c-ok">3</div><div class="jmstat-lbl">👩 승인</div></div>
-            <div class="jmstat"><div class="jmstat-num c-warn">1</div><div class="jmstat-lbl">대기</div></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 3/21 (금) -->
-      <div class="dg-label" data-jv="ltower">3월 21일 (금)</div>
-      <div class="jmc" data-jv="ltower" onclick="openDetail('ltower','3월 21일 (금)','09:00–18:00')">
-        <div class="jmt">
-          <div class="vicon vi-b">🏛️</div>
-          <div style="flex:1"><div class="jm-title">L타워 웨딩홀</div><div class="jm-date">3월 21일 (금)</div></div>
-          <span class="jmc-arrow">›</span>
-        </div>
-        <div class="jmb">
-          <div class="jm-stats">
-            <div class="jmstat"><div class="jmstat-num">5</div><div class="jmstat-lbl">👨 남 모집</div></div>
-            <div class="jmstat"><div class="jmstat-num c-ok">1</div><div class="jmstat-lbl">👨 승인</div></div>
-            <div class="jmstat"><div class="jmstat-num">5</div><div class="jmstat-lbl">👩 여 모집</div></div>
-            <div class="jmstat"><div class="jmstat-num c-ok">0</div><div class="jmstat-lbl">👩 승인</div></div>
-            <div class="jmstat"><div class="jmstat-num c-warn">1</div><div class="jmstat-lbl">대기</div></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 3/22 (토) -->
-      <div class="dg-label" data-jv="whills">3월 22일 (토)</div>
-      <div class="jmc" data-jv="whills" onclick="openDetail('whills','3월 22일 (토)','09:00–18:00')">
-        <div class="jmt">
-          <div class="vicon vi-p">🏔️</div>
-          <div style="flex:1"><div class="jm-title">W힐스 웨딩홀</div><div class="jm-date">3월 22일 (토)</div></div>
-          <span class="jmc-arrow">›</span>
-        </div>
-        <div class="jmb">
-          <div class="jm-stats">
-            <div class="jmstat"><div class="jmstat-num">4</div><div class="jmstat-lbl">👨 남 모집</div></div>
-            <div class="jmstat"><div class="jmstat-num c-ok">1</div><div class="jmstat-lbl">👨 승인</div></div>
-            <div class="jmstat"><div class="jmstat-num">4</div><div class="jmstat-lbl">👩 여 모집</div></div>
-            <div class="jmstat"><div class="jmstat-num c-ok">0</div><div class="jmstat-lbl">👩 승인</div></div>
-            <div class="jmstat"><div class="jmstat-num c-warn">1</div><div class="jmstat-lbl">대기</div></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 3/25 (화) -->
-      <div class="dg-label" data-jv="gonjiam">3월 25일 (화)</div>
-      <div class="jmc" data-jv="gonjiam" onclick="openDetail('gonjiam','3월 25일 (화)','22:00–06:00')">
-        <div class="jmt">
-          <div class="vicon vi-g">📦</div>
-          <div style="flex:1"><div class="jm-title">곤지암 택배물류허브</div><div class="jm-date">3월 25일 (화) · 야간</div></div>
-          <span class="jmc-arrow">›</span>
-        </div>
-        <div class="jmb">
-          <div class="jm-stats">
-            <div class="jmstat"><div class="jmstat-num">10</div><div class="jmstat-lbl">👨 남 모집</div></div>
-            <div class="jmstat"><div class="jmstat-num c-ok">0</div><div class="jmstat-lbl">👨 승인</div></div>
-            <div class="jmstat"><div class="jmstat-num">10</div><div class="jmstat-lbl">👩 여 모집</div></div>
-            <div class="jmstat"><div class="jmstat-num c-ok">0</div><div class="jmstat-lbl">👩 승인</div></div>
-            <div class="jmstat"><div class="jmstat-num c-warn">0</div><div class="jmstat-lbl">대기</div></div>
-          </div>
-        </div>
-      </div>
-
-      <div style="height:8px"></div>
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px 0;">
+        <input type="checkbox" id="jf-urgent" style="width:20px;height:20px;accent-color:var(--color-danger);">
+        <span style="font-size:14px;font-weight:600;color:var(--color-danger);">🚨 긴급 구인으로 등록</span>
+      </label>
     </div>
-
-    <div class="bnav">
-      <button class="ni" onclick="go('home',this)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg><span>홈</span></button>
-      <button class="ni on" onclick="go('jobs',this)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg><span>공고</span></button>
-      <button class="ni" onclick="go('schedule',this)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>스케줄</span></button>
-      <button class="ni" onclick="go('workers',this)" style="position:relative"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg><span>근무자</span><div class="nb" id="nb2">3</div></button>
+    <button class="btn-primary" onclick="saveJob()">저장하기</button>
+    <div id="jf-delete-btn" style="display:none;margin-top:10px;">
+      <button class="btn-danger-outline" style="width:100%;height:48px;border-radius:12px;font-size:15px;" onclick="deleteJob()">공고 삭제</button>
     </div>
   </div>
+</div>
 
-  <!-- ══ 공고 상세 ══ -->
-  <div id="pg-detail" class="pg">
-    <div class="detail-header">
-      <button class="back-btn" onclick="go('jobs',null)">←</button>
-      <div style="flex:1">
-        <div id="detail-title" style="font-size:15px;font-weight:800;color:#fff;"></div>
-        <div id="detail-date" style="font-size:12px;color:rgba(255,255,255,.5);margin-top:1px;"></div>
-      </div>
-    </div>
-    <div class="sc">
-      <div style="padding:14px 16px 4px;display:flex;gap:6px;overflow-x:auto;" id="detail-filter">
-        <button class="fc on" onclick="detFilt(this,'all')">전체</button>
-        <button class="fc" onclick="detFilt(this,'wait')">대기중</button>
-        <button class="fc" onclick="detFilt(this,'app')">승인됨</button>
-        <button class="fc" onclick="detFilt(this,'rej')">거절됨</button>
-      </div>
-      <div id="detail-list"></div>
-      <div style="height:16px"></div>
-    </div>
-    <div class="bnav">
-      <button class="ni" onclick="go('home',this)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg><span>홈</span></button>
-      <button class="ni on" onclick="go('jobs',this)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg><span>공고</span></button>
-      <button class="ni" onclick="go('schedule',this)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>스케줄</span></button>
-      <button class="ni" onclick="go('workers',this)" style="position:relative"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg><span>근무자</span></button>
-    </div>
+<!-- SCHEDULE -->
+<div id="screen-schedule" class="screen">
+  <div class="app-header">
+    <div class="app-logo">스케줄</div>
+    <select id="schedule-venue-filter" class="form-select" style="height:34px;width:auto;font-size:13px;background:rgba(255,255,255,0.15);color:#fff;border-color:rgba(255,255,255,0.3);padding:0 28px 0 10px;" onchange="loadSchedule()">
+      <option value="">전체 거점</option>
+      <option value="ltower">L타워</option>
+      <option value="whills">W힐스</option>
+      <option value="gonjiam">곤지암</option>
+    </select>
   </div>
-
-  <!-- ══ 스케줄 ══ -->
-  <div id="pg-schedule" class="pg">
-    <div class="sch-header"><div class="sch-title">스케줄 관리</div></div>
-    <div class="sc">
-      <div style="height:12px"></div>
-      <div class="calwrap">
-        <div class="calh"><div class="calm">2026년 3월</div><div><button class="caln">‹</button><button class="caln">›</button></div></div>
-        <div class="cald">
-          <div class="cdlbl sun">일</div><div class="cdlbl">월</div><div class="cdlbl">화</div><div class="cdlbl">수</div><div class="cdlbl">목</div><div class="cdlbl">금</div><div class="cdlbl">토</div>
-          <div class="cd emp"></div><div class="cd emp"></div><div class="cd emp"></div><div class="cd emp"></div><div class="cd emp"></div><div class="cd emp"></div><div class="cd">1</div>
-          <div class="cd sun">2</div><div class="cd">3</div><div class="cd">4</div><div class="cd">5</div><div class="cd">6</div><div class="cd">7</div><div class="cd">8</div>
-          <div class="cd sun">9</div><div class="cd">10</div><div class="cd">11</div><div class="cd">12</div><div class="cd">13</div><div class="cd">14</div><div class="cd">15</div>
-          <div class="cd sun today" onclick="showDay(16,this)">16</div>
-          <div class="cd has" onclick="showDay(17,this)">17</div><div class="cd has" onclick="showDay(18,this)">18</div><div class="cd has" onclick="showDay(19,this)">19</div><div class="cd">20</div><div class="cd has" onclick="showDay(21,this)">21</div><div class="cd has" onclick="showDay(22,this)">22</div>
-          <div class="cd sun has" onclick="showDay(23,this)">23</div><div class="cd">24</div><div class="cd has" onclick="showDay(25,this)">25</div><div class="cd">26</div><div class="cd">27</div><div class="cd has" onclick="showDay(28,this)">28</div><div class="cd sun has" onclick="showDay(29,this)">29</div>
-          <div class="cd">30</div><div class="cd sun">31</div>
+  <div class="tab-content">
+    <div style="padding:16px;">
+      <div class="card">
+        <div class="calendar-header">
+          <button class="cal-nav" onclick="changeScheduleMonth(-1)">‹</button>
+          <span class="cal-month" id="schedule-cal-label"></span>
+          <button class="cal-nav" onclick="changeScheduleMonth(1)">›</button>
         </div>
+        <div class="calendar-grid" id="schedule-calendar-grid"></div>
       </div>
-      <div id="sday-t" style="font-size:14px;font-weight:700;color:var(--text);padding:4px 20px 10px;display:none;"></div>
-      <div id="sday-c" style="padding:0 16px;"></div>
-      <div id="sday-g" style="text-align:center;padding:32px 20px;color:var(--text3);"><div style="font-size:32px;margin-bottom:12px;">📅</div><div style="font-size:14px;font-weight:600;color:var(--text2);">날짜를 탭하면 근무자를 확인해요</div></div>
-    </div>
-    <div class="bnav">
-      <button class="ni" onclick="go('home',this)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg><span>홈</span></button>
-      <button class="ni" onclick="go('jobs',this)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg><span>공고</span></button>
-      <button class="ni on" onclick="go('schedule',this)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>스케줄</span></button>
-      <button class="ni" onclick="go('workers',this)" style="position:relative"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg><span>근무자</span><div class="nb" id="nb3">3</div></button>
+      <div id="schedule-date-title" style="font-size:16px;font-weight:700;margin:12px 0 10px;"></div>
+      <div id="schedule-day-workers"></div>
     </div>
   </div>
+  <nav class="bottom-nav">
+    <button class="nav-item" onclick="switchTab('home',this)"><span class="nav-icon">🏠</span>홈</button>
+    <button class="nav-item" onclick="switchTab('jobs',this)"><span class="nav-icon">📋</span>공고</button>
+    <button class="nav-item active" onclick="switchTab('schedule',this)"><span class="nav-icon">📅</span>스케줄</button>
+    <button class="nav-item" onclick="switchTab('workers',this)"><span class="nav-icon">👥</span>근무자</button>
+    <button class="nav-item" onclick="switchTab('settle',this)"><span class="nav-icon">💰</span>정산</button>
+  </nav>
+</div>
 
-  <!-- ══ 근무자 ══ -->
-  <div id="pg-workers" class="pg">
-    <div class="wk-header">
-      <div style="font-size:18px;font-weight:800;color:#fff;">근무자 관리</div>
-      <div style="font-size:12px;color:rgba(255,255,255,.4);">총 20명</div>
-    </div>
-    <div class="frow" style="flex-shrink:0;background:#fff;border-bottom:1px solid var(--border);">
-      <button class="fc on" onclick="mFilt(this,'all')">전체</button>
-      <button class="fc" onclick="mFilt(this,'ltower')">L타워</button>
-      <button class="fc" onclick="mFilt(this,'whills')">W힐스</button>
-      <button class="fc" onclick="mFilt(this,'gonjiam')">곤지암</button>
-    </div>
-    <div class="sc" id="member-list-wrap">
-      <div style="height:8px"></div>
-      <div id="ace-section">
-        <div style="font-size:11px;font-weight:700;color:#F5A623;padding:4px 20px 6px;letter-spacing:.3px;">⭐ 에이스</div>
-      </div>
-      <div id="normal-section"></div>
-      <div style="height:8px"></div>
-    </div>
-    <div class="bnav">
-      <button class="ni" onclick="go('home',this)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg><span>홈</span></button>
-      <button class="ni" onclick="go('jobs',this)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg><span>공고</span></button>
-      <button class="ni" onclick="go('schedule',this)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>스케줄</span></button>
-      <button class="ni on" onclick="go('workers',this)" style="position:relative"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg><span>근무자</span><div class="nb" id="nb4">3</div></button>
-    </div>
+<!-- WORKERS -->
+<div id="screen-workers" class="screen">
+  <div class="app-header">
+    <div class="app-logo">근무자</div>
+    <input type="search" id="worker-search" placeholder="이름 검색" style="height:34px;width:130px;border:1px solid rgba(255,255,255,0.3);border-radius:8px;background:rgba(255,255,255,0.15);color:#fff;padding:0 10px;font-size:13px;outline:none;" oninput="filterWorkers()">
   </div>
+  <div class="tab-content">
+    <!-- 탭 -->
+    <div style="display:flex;background:#fff;border-bottom:1px solid #eee;position:sticky;top:57px;z-index:15;">
+      <button class="nav-item active" id="wtab-workers" style="border-bottom:2px solid var(--color-royal);color:var(--color-royal);padding:12px;" onclick="showWorkerTab('workers')">근무자</button>
+      <button class="nav-item" id="wtab-inquiry" style="padding:12px;" onclick="showWorkerTab('inquiry')">문의</button>
+    </div>
+    <div id="workers-list" style="padding:0;"></div>
+    <div id="inquiry-list-boss" style="padding:12px;display:none;"></div>
+  </div>
+  <nav class="bottom-nav">
+    <button class="nav-item" onclick="switchTab('home',this)"><span class="nav-icon">🏠</span>홈</button>
+    <button class="nav-item" onclick="switchTab('jobs',this)"><span class="nav-icon">📋</span>공고</button>
+    <button class="nav-item" onclick="switchTab('schedule',this)"><span class="nav-icon">📅</span>스케줄</button>
+    <button class="nav-item active" onclick="switchTab('workers',this)"><span class="nav-icon">👥</span>근무자</button>
+    <button class="nav-item" onclick="switchTab('settle',this)"><span class="nav-icon">💰</span>정산</button>
+  </nav>
+</div>
 
-  <!-- ══ 공고 등록 모달 ══ -->
-  <div class="moverlay" id="reg-modal" onclick="closeRegModal(event)">
-    <div class="msheet" onclick="event.stopPropagation()">
-      <div class="mhandle"></div>
-      <div class="mtitle">공고 등록</div>
-      <div class="msub">알바 공고를 작성해주세요</div>
-      <div class="flbl">근무지</div>
-      <select class="finput" id="reg-venue-sel" onchange="prefillVenueMap(this.value)">
-        <option value="">선택하세요</option>
-        <option value="ltower">L타워 웨딩홀</option>
-        <option value="whills">W힐스 웨딩홀</option>
-        <option value="gonjiam">곤지암 택배물류허브</option>
-      </select>
+<!-- WORKER DETAIL -->
+<div id="screen-worker-detail" class="screen">
+  <div class="detail-header">
+    <button class="back-btn" onclick="goBack()">←</button>
+    <div class="detail-header-title" id="wd-header-title">근무자 상세</div>
+  </div>
+  <div class="detail-body" id="worker-detail-body">
+    <div class="loading-wrap"><div class="loading-spinner"></div></div>
+  </div>
+</div>
 
-      <div class="map-section">
-        <div class="flbl" style="margin-bottom:8px;">📍 위치 설정</div>
-        <div class="map-search-row">
-          <input class="map-search-input" id="map-search-kw" type="text" placeholder="주소 또는 장소명 검색">
-          <button class="map-search-btn" onclick="searchMapAddr()">검색</button>
-        </div>
-        <div class="map-box">
-          <div id="reg-kakao-map"></div>
-          <div class="map-guide" id="map-guide">
-            <div style="font-size:28px;">📍</div>
-            <div style="font-size:13px;font-weight:600;color:var(--text2);">주소 검색 후 위치를 확인하세요</div>
+<!-- SETTLEMENT -->
+<div id="screen-settle" class="screen">
+  <div class="app-header">
+    <div class="app-logo">급여 정산</div>
+  </div>
+  <div class="tab-content">
+    <div style="padding:16px;">
+      <div class="card">
+        <div class="form-section-title">조회 조건</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+          <div>
+            <label class="form-label">년도</label>
+            <select class="form-select" id="settle-year" style="height:44px;"></select>
+          </div>
+          <div>
+            <label class="form-label">월</label>
+            <select class="form-select" id="settle-month" style="height:44px;">
+              <option value="01">1월</option><option value="02">2월</option><option value="03">3월</option>
+              <option value="04">4월</option><option value="05">5월</option><option value="06">6월</option>
+              <option value="07">7월</option><option value="08">8월</option><option value="09">9월</option>
+              <option value="10">10월</option><option value="11">11월</option><option value="12">12월</option>
+            </select>
           </div>
         </div>
-        <div class="map-addr-display" id="map-addr-display">
-          <span>📍</span><span id="map-addr-text">위치를 검색하거나 지도를 탭해 마커를 이동하세요</span>
+        <div class="form-group">
+          <label class="form-label">거점</label>
+          <select class="form-select" id="settle-venue" style="height:44px;">
+            <option value="">전체</option>
+            <option value="ltower">L타워</option>
+            <option value="whills">W힐스</option>
+            <option value="gonjiam">곤지암</option>
+          </select>
         </div>
-        <button class="map-reset-btn" onclick="resetMap()">위치 초기화</button>
+        <button class="btn-primary" onclick="loadSettlement()">조회</button>
       </div>
 
-      <div class="flbl">근무 날짜</div>
-      <div class="dchips">
-        <button class="dc" onclick="this.classList.toggle('sel')">3/17 월</button>
-        <button class="dc" onclick="this.classList.toggle('sel')">3/18 화</button>
-        <button class="dc" onclick="this.classList.toggle('sel')">3/19 수</button>
-        <button class="dc" onclick="this.classList.toggle('sel')">3/20 목</button>
-        <button class="dc" onclick="this.classList.toggle('sel')">3/21 금</button>
-        <button class="dc" onclick="this.classList.toggle('sel')">3/22 토</button>
-        <button class="dc" onclick="this.classList.toggle('sel')">3/23 일</button>
+      <div id="settle-result" style="display:none;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <div class="section-title" style="margin-bottom:0;">정산 내역</div>
+          <button class="btn-sm btn-sm-primary" onclick="exportExcel()">📥 엑셀 다운로드</button>
+        </div>
+        <div style="overflow-x:auto;background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+          <table class="settle-table" id="settle-table">
+            <thead>
+              <tr>
+                <th>이름</th><th>거점</th><th>근무일</th><th>출근</th><th>퇴근</th><th>시간</th><th>시급</th><th>예정액</th>
+              </tr>
+            </thead>
+            <tbody id="settle-tbody"></tbody>
+          </table>
+        </div>
+        <div class="settle-total">
+          <span class="settle-total-label">총 지급 예정액</span>
+          <span class="settle-total-value" id="settle-grand-total">0원</span>
+        </div>
       </div>
-      <div class="flbl">근무 시간</div>
-      <div class="finput-row">
-        <input class="finput" type="time" value="09:00">
-        <span style="align-self:center;color:var(--text2);font-size:14px;">—</span>
-        <input class="finput" type="time" value="18:00">
-      </div>
-      <div class="flbl">모집 인원</div>
-      <div class="finput-row">
-        <div style="flex:1"><div style="font-size:11px;color:var(--text2);margin-bottom:5px;">👨 남</div><input class="finput" style="margin:0" type="number" value="5" min="0"></div>
-        <div style="flex:1"><div style="font-size:11px;color:var(--text2);margin-bottom:5px;">👩 여</div><input class="finput" style="margin:0" type="number" value="5" min="0"></div>
-      </div>
-      <div class="flbl" style="margin-top:16px;">시급</div>
-      <select class="finput"><option>10,320원 (주휴포함 12,384원)</option><option selected>12,384원 (주휴포함)</option><option>18,000원 (주휴포함)</option></select>
-      <div class="flbl">포인트 지급</div>
-      <select class="finput" style="margin-bottom:24px"><option>미지급</option><option>1,000P</option><option selected>2,000P</option><option>3,000P</option></select>
-      <div class="flbl">복장 안내</div>
-      <input class="finput" type="text" placeholder="예) 흰 셔츠 + 검정 바지">
-      <div class="flbl">이동 방법</div>
-      <input class="finput" type="text" placeholder="예) 지하철 2호선 강남역 2번 출구">
-      <div class="flbl">주의사항</div>
-      <textarea class="finput" rows="3" placeholder="알바생에게 전달할 주의사항을 입력하세요" style="resize:none;"></textarea>
-      <button class="btn-full" onclick="submitReg()">등록하기</button>
     </div>
   </div>
+  <nav class="bottom-nav">
+    <button class="nav-item" onclick="switchTab('home',this)"><span class="nav-icon">🏠</span>홈</button>
+    <button class="nav-item" onclick="switchTab('jobs',this)"><span class="nav-icon">📋</span>공고</button>
+    <button class="nav-item" onclick="switchTab('schedule',this)"><span class="nav-icon">📅</span>스케줄</button>
+    <button class="nav-item" onclick="switchTab('workers',this)"><span class="nav-icon">👥</span>근무자</button>
+    <button class="nav-item active" onclick="switchTab('settle',this)"><span class="nav-icon">💰</span>정산</button>
+  </nav>
+</div>
 
-  <div id="toast"></div>
+<!-- BOSS NOTIFICATIONS -->
+<div id="screen-noti-boss" class="screen">
+  <div class="detail-header">
+    <button class="back-btn" onclick="goBack()">←</button>
+    <div class="detail-header-title">알림</div>
+  </div>
+  <div style="flex:1;overflow-y:auto;" id="boss-noti-list">
+    <div class="loading-wrap"><div class="loading-spinner"></div></div>
+  </div>
+</div>
+
+<!-- MODALS -->
+
+<!-- 승인 취소 모달 -->
+<div id="modal-cancel-approve" class="modal-overlay" style="display:none">
+  <div class="modal-sheet">
+    <div class="modal-title">승인 취소</div>
+    <div class="form-group">
+      <label class="form-label">취소 사유</label>
+      <textarea class="form-input" id="cancel-reason" placeholder="취소 사유를 입력해주세요"></textarea>
+    </div>
+    <button class="btn-primary" onclick="submitCancelApprove()">취소 처리</button>
+    <button class="btn-secondary" style="margin-top:8px" onclick="closeModal('modal-cancel-approve')">닫기</button>
+  </div>
+</div>
+
+<!-- 포인트 지급 모달 -->
+<div id="modal-grant-point" class="modal-overlay" style="display:none">
+  <div class="modal-sheet">
+    <div class="modal-title">포인트 지급</div>
+    <div class="form-group">
+      <label class="form-label">지급 금액 (P)</label>
+      <input class="form-input" id="grant-amount" type="number" inputmode="numeric" placeholder="예: 5000">
+    </div>
+    <div class="form-group">
+      <label class="form-label">지급 사유</label>
+      <input class="form-input" id="grant-desc" type="text" placeholder="예: 우수 근무자 보너스">
+    </div>
+    <button class="btn-primary" onclick="submitGrantPoint()">지급하기</button>
+    <button class="btn-secondary" style="margin-top:8px" onclick="closeModal('modal-grant-point')">취소</button>
+  </div>
+</div>
+
+<!-- 블랙리스트 메모 모달 -->
+<div id="modal-blacklist" class="modal-overlay" style="display:none">
+  <div class="modal-sheet">
+    <div class="modal-title">블랙리스트 메모</div>
+    <div class="form-group">
+      <textarea class="form-input" id="blacklist-memo" placeholder="메모 없으면 비워두세요 (비우면 메모 삭제)"></textarea>
+    </div>
+    <button class="btn-primary" onclick="submitBlacklist()">저장</button>
+    <button class="btn-secondary" style="margin-top:8px" onclick="closeModal('modal-blacklist')">취소</button>
+  </div>
+</div>
+
+<!-- 문의 답변 모달 -->
+<div id="modal-inquiry-reply" class="modal-overlay" style="display:none">
+  <div class="modal-sheet">
+    <div class="modal-title">문의 답변</div>
+    <div style="background:#f8fafc;border-radius:10px;padding:14px;margin-bottom:16px;font-size:13px;color:var(--color-sub-text);line-height:1.6;" id="inquiry-question-view"></div>
+    <div class="form-group">
+      <label class="form-label">답변 내용</label>
+      <textarea class="form-input" id="inquiry-reply-text" placeholder="답변을 입력해주세요"></textarea>
+    </div>
+    <button class="btn-primary" onclick="submitInquiryReply()">답변 등록</button>
+    <button class="btn-secondary" style="margin-top:8px" onclick="closeModal('modal-inquiry-reply')">취소</button>
+  </div>
 </div>
 
 <script>
-const days2=['일','월','화','수','목','금','토'];
-const n=new Date();
-const hd=document.getElementById('hdate');
-if(hd) hd.textContent=n.getFullYear()+'년 '+(n.getMonth()+1)+'월 '+n.getDate()+'일 ('+days2[n.getDay()]+')';
-
-function doLogin(){
-  const id=document.getElementById('lid').value.trim();
-  const pw=document.getElementById('lpw').value.trim();
-  if(!id||!pw){toast('⚠️ 아이디와 비밀번호를 입력해주세요');return;}
-  document.getElementById('pg-login').classList.remove('on');
-  document.getElementById('pg-home').classList.add('on');
-  toast('✅ 로그인됐어요!');
-}
-
-function go(tab,btn){
-  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
-  document.getElementById('pg-'+tab).classList.add('on');
-}
-
-// 홈 승인/거절
-let pc=3;
-function appv(id,ok){
-  const r=document.getElementById(id);
-  if(!r)return;
-  r.style.opacity='.35';r.style.pointerEvents='none';
-  toast(ok?'✅ 승인! 알바생에게 알림 전송됩니다':'❌ 거절됐어요');
-  pc=Math.max(0,pc-1);
-  document.querySelectorAll('[id^="nb"]').forEach(el=>{el.textContent=pc;el.style.display=pc>0?'flex':'none';});
-  const pel=document.getElementById('pc');if(pel)pel.textContent=pc;
-  if(pc===0)document.getElementById('pempty').style.display='block';
-}
-
-// 홈 공고현황 필터
-function homeFilter(btn,v){
-  btn.closest('.frow').querySelectorAll('.fc').forEach(b=>b.classList.remove('on'));
-  btn.classList.add('on');
-  document.querySelectorAll('#home-job-list .jlcard').forEach(c=>{
-    c.style.display=(v==='all'||c.dataset.v===v)?'block':'none';
-  });
-  document.querySelectorAll('#home-job-list .dg-label').forEach(lbl=>{
-    if(v==='all'){lbl.style.display='block';return;}
-    const next=lbl.nextElementSibling;
-    lbl.style.display=(next&&next.dataset.v===v)?'block':'none';
-  });
-}
-
-// 공고 탭 필터
-function jobFilter(btn,v){
-  btn.closest('.frow').querySelectorAll('.fc').forEach(b=>b.classList.remove('on'));
-  btn.classList.add('on');
-  document.querySelectorAll('#pg-jobs .jmc').forEach(c=>{
-    c.style.display=(v==='all'||c.dataset.jv===v)?'block':'none';
-  });
-  document.querySelectorAll('#pg-jobs .dg-label').forEach(lbl=>{
-    if(v==='all'){lbl.style.display='block';return;}
-    lbl.style.display=(lbl.dataset.jv&&lbl.dataset.jv.includes(v))?'block':'none';
-  });
-}
-
-// 공고 상세
-const detailData = {
-  ltower:[
-    {name:'김민현',gender:'남',rat:'★★★★★ 4.8',cnt:'12회',s:'app'},
-    {name:'이서진',gender:'여',rat:'★★★★☆ 4.2',cnt:'5회',s:'app'},
-    {name:'박준혁',gender:'남',rat:'★★★☆☆ 3.5',cnt:'3회',s:'app'},
-    {name:'김남돈',gender:'남',rat:'★★★★★ 5.0',cnt:'8회',s:'wait'},
-    {name:'최지영',gender:'여',rat:'★★★★☆ 4.0',cnt:'2회',s:'rej'},
-  ],
-  whills:[
-    {name:'김태범',gender:'남',rat:'★★★★☆ 4.3',cnt:'7회',s:'app'},
-    {name:'나예은',gender:'여',rat:'★★★★★ 4.9',cnt:'10회',s:'app'},
-    {name:'이성기',gender:'여',rat:'★★★☆☆ 3.2',cnt:'3회',s:'wait'},
-  ],
-  gonjiam:[
-    {name:'박민준',gender:'남',rat:'★★★★☆ 4.1',cnt:'5회',s:'wait'},
-    {name:'강동원',gender:'남',rat:'★★★★★ 4.7',cnt:'9회',s:'app'},
-    {name:'손지민',gender:'여',rat:'★★★☆☆ 3.8',cnt:'4회',s:'app'},
-    {name:'임현수',gender:'남',rat:'★★☆☆☆ 2.5',cnt:'1회',s:'rej'},
-  ]
+// ═══════════════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════════════
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCQr4JU1yoSEFB_w71VkaEe9xCcfHUvbec",
+  authDomain: "jobpit-6ad88.firebaseapp.com",
+  projectId: "jobpit-6ad88",
+  storageBucket: "jobpit-6ad88.firebasestorage.app",
+  messagingSenderId: "653138619945",
+  appId: "1:653138619945:web:401863bfe7142019cfb638",
+  measurementId: "G-DREN8TFYRW"
 };
+const APP_VERSION = "1.0.0";
 
-function openDetail(venue,date,time){
-  const vName={ltower:'L타워 웨딩홀',whills:'W힐스 웨딩홀',gonjiam:'곤지암 택배물류허브'};
-  document.getElementById('detail-title').textContent=vName[venue];
-  document.getElementById('detail-date').textContent=date+' '+time;
-  renderDetail(venue,'all');
-  // 필터 초기화
-  document.querySelectorAll('#detail-filter .fc').forEach(b=>b.classList.remove('on'));
-  document.querySelector('#detail-filter .fc').classList.add('on');
-  go('detail',null);
-}
-function renderDetail(venue,filter){
-  const data=detailData[venue]||[];
-  const list=document.getElementById('detail-list');
-  const bdgMap={wait:'bdg-wait',app:'bdg-app',rej:'bdg-rej'};
-  const txtMap={wait:'대기중',app:'승인됨',rej:'거절됨'};
-  list.innerHTML=`<div style="height:8px"></div>`+
-    data.filter(d=>filter==='all'||d.s===filter).map(d=>`
-      <div class="wkcard" data-s="${d.s}" style="margin:0 16px 8px">
-        <div class="wkt">
-          <div class="wkav">${d.gender==='남'?'🧑':'👩'}</div>
-          <div style="flex:1">
-            <div class="wk-name">${d.name}</div>
-            <div class="wk-meta">${d.gender} · ${d.cnt} 근무</div>
-            <div class="wk-rat">${d.rat}</div>
-          </div>
-          <span class="${bdgMap[d.s]}">${txtMap[d.s]}</span>
-        </div>
-        ${d.s==='wait'?`<div class="wkbot"><div style="font-size:11px;color:var(--text2);">신청중</div><div style="display:flex;gap:5px"><button class="btn-ok" onclick="inlineApprove(this)">승인</button><button class="btn-no" onclick="inlineReject(this)">거절</button></div></div>`:''}
-      </div>`).join('');
-  if(list.innerHTML==='<div style="height:8px"></div>') list.innerHTML+='<div style="text-align:center;padding:32px;color:var(--text3);font-size:13px;">해당 항목이 없어요</div>';
-}
-let currentDetailVenue='';
-function detFilt(btn,s){
-  btn.closest('.frow').querySelectorAll('.fc').forEach(b=>b.classList.remove('on'));
-  btn.classList.add('on');
-  const title=document.getElementById('detail-title').textContent;
-  const vMap={'L타워 웨딩홀':'ltower','W힐스 웨딩홀':'whills','곤지암 택배물류허브':'gonjiam'};
-  renderDetail(vMap[title],s);
-}
-function inlineApprove(btn){
-  const card=btn.closest('.wkcard');
-  card.querySelector('[class^="bdg-"]').className='bdg-app';
-  card.querySelector('[class^="bdg-"]').textContent='승인됨';
-  card.querySelector('.wkbot').remove();
-  toast('✅ 승인됐어요!');
-}
-function inlineReject(btn){
-  const card=btn.closest('.wkcard');
-  card.querySelector('[class^="bdg-"]').className='bdg-rej';
-  card.querySelector('[class^="bdg-"]').textContent='거절됨';
-  card.querySelector('.wkbot').remove();
-  toast('❌ 거절됐어요');
-}
-
-// 스케줄
-const sdata={
-  17:[{name:'김민현',venue:'L타워',time:'09:00–18:00',st:'ok'},{name:'박민준',venue:'곤지암',time:'22:00–06:00',st:'pend'}],
-  18:[{name:'이성기',venue:'곤지암',time:'22:00–06:00',st:'pend'}],
-  19:[{name:'김태범',venue:'W힐스',time:'09:00–18:00',st:'ok'}],
-  21:[{name:'김남돈',venue:'L타워',time:'09:00–18:00',st:'pend'}],
-  22:[{name:'이성기',venue:'W힐스',time:'09:00–18:00',st:'pend'}],
-  23:[{name:'김민현',venue:'L타워',time:'09:00–18:00',st:'pend'}],
-  25:[{name:'김태범',venue:'W힐스',time:'09:00–18:00',st:'pend'},{name:'박민준',venue:'L타워',time:'09:00–18:00',st:'pend'}],
-  28:[{name:'김민현',venue:'L타워',time:'09:00–18:00',st:'pend'}],
-  29:[{name:'이성기',venue:'W힐스',time:'09:00–18:00',st:'pend'}],
+const VENUES = {
+  ltower:  { name: "L타워 웨딩홀",       address: "서울 강남구 테헤란로",   lat: 37.4979, lng: 127.0276, defaultWage: 12384 },
+  whills:  { name: "W힐스 웨딩홀",       address: "경기 성남시 분당구",      lat: 37.3595, lng: 127.1085, defaultWage: 12384 },
+  gonjiam: { name: "곤지암 택배물류허브", address: "경기 광주시 오포읍",      lat: 37.3422, lng: 127.3266, defaultWage: 18000 }
 };
-function showDay(d,el){
-  document.querySelectorAll('.cd').forEach(c=>c.classList.remove('sel2'));
-  el.classList.add('sel2');
-  const data=sdata[d];
-  const t=document.getElementById('sday-t');
-  const c=document.getElementById('sday-c');
-  const g=document.getElementById('sday-g');
-  t.textContent='3월 '+d+'일 근무자';t.style.display='block';g.style.display='none';
-  if(!data||!data.length){c.innerHTML='<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px;">이 날은 근무자가 없어요</div>';return;}
-  c.innerHTML=data.map(w=>`<div class="swr"><div style="width:34px;height:34px;background:var(--bg);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;">🧑</div><div style="flex:1"><div style="font-size:13px;font-weight:700;color:var(--text)">${w.name}</div><div style="font-size:11px;color:var(--text2)">${w.venue} · ${w.time}</div></div><span class="sw-st ${w.st==='ok'?'st-ok':'st-pend'}">${w.st==='ok'?'출근완료':'출근예정'}</span></div>`).join('');
+const CATEGORY_LABELS = { general:"일반", payment:"급여", checkin:"출근", point:"포인트", bug:"오류", other:"기타" };
+
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+let db, auth;
+let currentAdmin = null;
+let sessionId = null;
+let sessionInterval = null;
+let prevScreen = null;
+let currentScreen = 'splash';
+let schedCalDate = new Date();
+let schedData = {};
+let currentEditJobId = null;
+let currentViewWorkerId = null;
+let pendingCancelAppId = null;
+let pendingGrantWorkerId = null;
+let pendingInquiryId = null;
+let allWorkers = [];
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+async function init() {
+  try {
+    firebase.initializeApp(FIREBASE_CONFIG);
+    db = firebase.firestore();
+    auth = firebase.auth();
+  } catch(e) { showScreen('login'); return; }
+
+  await checkAppConfig();
+  initSettleYears();
 }
 
-// 근무자 필터
-function mFilt(btn,v){
-  btn.closest('.frow').querySelectorAll('.fc').forEach(b=>b.classList.remove('on'));
-  btn.classList.add('on');
-  document.querySelectorAll('.member-card').forEach(c=>{
-    c.style.display=(v==='all'||c.dataset.v===v)?'block':'none';
-  });
-  // 에이스 섹션 헤더 표시 여부
-  const aceVisible=Array.from(document.querySelectorAll('#ace-section .member-card')).some(c=>c.style.display!=='none');
-  const aceLbl=document.querySelector('#ace-section > div:first-child');
-  if(aceLbl) aceLbl.style.display=aceVisible?'block':'none';
-}
-function wkA(btn){
-  const card=btn.closest('.wkcard');
-  card.querySelector('[class^="bdg-"]').className='bdg-app';
-  card.querySelector('[class^="bdg-"]').textContent='승인됨';
-  card.dataset.s='app';
-  btn.closest('.wkbot').querySelector('div:last-child').innerHTML='<span style="font-size:11px;color:var(--ok);font-weight:600;">출근 예정 ✓</span>';
-  pc=Math.max(0,pc-1);
-  document.querySelectorAll('[id^="nb"]').forEach(el=>{el.textContent=pc;el.style.display=pc>0?'flex':'none';});
-  const pel=document.getElementById('pc');if(pel)pel.textContent=pc;
-  toast('✅ 승인됐어요!');
-}
-function wkR(btn){
-  const card=btn.closest('.wkcard');
-  card.querySelector('[class^="bdg-"]').className='bdg-rej';
-  card.querySelector('[class^="bdg-"]').textContent='거절됨';
-  card.dataset.s='rej';
-  btn.closest('.wkbot').querySelector('div:last-child').remove();
-  pc=Math.max(0,pc-1);
-  document.querySelectorAll('[id^="nb"]').forEach(el=>{el.textContent=pc;el.style.display=pc>0?'flex':'none';});
-  toast('❌ 거절됐어요');
+async function checkAppConfig() {
+  try {
+    const cfg = await db.collection('appConfig').doc('general').get();
+    if (cfg.exists) {
+      const d = cfg.data();
+      if (d.maintenanceMode) {
+        document.getElementById('maint-msg').textContent = d.maintenanceMessage || '점검 중입니다.';
+        showScreen('maintenance'); return;
+      }
+      if (compareVersions(APP_VERSION, d.minAppVersion) < 0) { showScreen('update'); return; }
+    }
+  } catch(e) {}
+
+  await checkSession_stored();
 }
 
-
-// ── 공고 등록 지도 ──
-let regMap = null;
-let regMarker = null;
-let regGeocoder = null;
-
-const venueCoords = {
-  ltower:  { lat:37.4989, lng:127.0281, name:'L타워 웨딩홀', addr:'서울 강남구 테헤란로' },
-  whills:  { lat:37.3955, lng:127.1266, name:'W힐스컨벤션', addr:'경기 성남시 분당구 성남대로925번길 16' },
-  gonjiam: { lat:37.4380, lng:127.3170, name:'곤지암 택배물류허브', addr:'경기 광주시 곤지암읍' },
-};
-
-function initRegMap(lat, lng) {
-  kakao.maps.load(function() {
-    const container = document.getElementById('reg-kakao-map');
-    if (!container) return;
-    const opts = { center: new kakao.maps.LatLng(lat, lng), level: 4 };
-    regMap = new kakao.maps.Map(container, opts);
-    regGeocoder = new kakao.maps.services.Geocoder();
-    regMarker = new kakao.maps.Marker({
-      position: new kakao.maps.LatLng(lat, lng),
-      map: regMap
-    });
-    document.getElementById('map-guide').classList.add('hidden');
-    // 지도 클릭시 마커 이동
-    kakao.maps.event.addListener(regMap, 'click', function(e) {
-      const latlng = e.latLng;
-      regMarker.setPosition(latlng);
-      regGeocoder.coord2Address(latlng.getLng(), latlng.getLat(), function(res, st) {
-        if (st === kakao.maps.services.Status.OK) {
-          const addr = res[0].road_address ? res[0].road_address.address_name : res[0].address.address_name;
-          document.getElementById('map-addr-text').innerHTML = '<b>' + addr + '</b>';
-        }
-      });
-    });
-  });
+function compareVersions(a, b) {
+  if (!a || !b) return 0;
+  const av = a.split('.').map(Number), bv = b.split('.').map(Number);
+  for (let i = 0; i < 3; i++) {
+    if ((av[i]||0) < (bv[i]||0)) return -1;
+    if ((av[i]||0) > (bv[i]||0)) return 1;
+  }
+  return 0;
 }
 
-function prefillVenueMap(val) {
-  if (!val || !venueCoords[val]) return;
-  const v = venueCoords[val];
-  document.getElementById('map-search-kw').value = v.name;
-  document.getElementById('map-addr-text').innerHTML = '<b>' + v.addr + '</b>';
-  if (!regMap) {
-    initRegMap(v.lat, v.lng);
-  } else {
-    const pos = new kakao.maps.LatLng(v.lat, v.lng);
-    regMap.setCenter(pos);
-    regMarker.setPosition(pos);
+async function checkSession_stored() {
+  await new Promise(r => setTimeout(r, 1500));
+  const stored = localStorage.getItem('boss_session');
+  if (stored) {
+    const { adminId, sid } = JSON.parse(stored);
+    const doc = await db.collection('admins').doc(adminId).get().catch(() => null);
+    if (doc && doc.exists && doc.data().currentSessionId === sid) {
+      currentAdmin = { id: doc.id, ...doc.data() };
+      sessionId = sid;
+      startSessionCheck();
+      showMainApp();
+      return;
+    }
+  }
+  showScreen('login');
+}
+
+// ═══════════════════════════════════════════════════════
+// LOGIN
+// ═══════════════════════════════════════════════════════
+async function doLogin() {
+  const loginId = document.getElementById('login-id').value.trim();
+  const pw = document.getElementById('login-pw').value;
+  const errEl = document.getElementById('login-error');
+  errEl.style.display = 'none';
+
+  if (!loginId || !pw) { errEl.textContent = '아이디와 비밀번호를 입력해주세요'; errEl.style.display = 'block'; return; }
+
+  try {
+    const snap = await db.collection('admins').where('loginId','==',loginId).get();
+    if (snap.empty) { errEl.textContent = '아이디 또는 비밀번호가 올바르지 않습니다'; errEl.style.display = 'block'; return; }
+    const doc = snap.docs[0];
+    const data = doc.data();
+
+    // 비밀번호 검증 (실제 운영 시 bcrypt Cloud Function 사용 권장)
+    // 여기서는 단순 비교 (Firebase 보안 규칙으로 보호)
+    const hash = await hashPassword(pw);
+    if (data.passwordHash !== hash && data.passwordHash !== pw) {
+      errEl.textContent = '아이디 또는 비밀번호가 올바르지 않습니다'; errEl.style.display = 'block'; return;
+    }
+
+    currentAdmin = { id: doc.id, ...data };
+    sessionId = crypto.randomUUID();
+    await doc.ref.update({ currentSessionId: sessionId });
+    localStorage.setItem('boss_session', JSON.stringify({ adminId: doc.id, sid: sessionId }));
+    startSessionCheck();
+    showMainApp();
+  } catch(e) {
+    errEl.textContent = '로그인 오류: ' + e.message; errEl.style.display = 'block';
   }
 }
 
-function searchMapAddr() {
-  const kw = document.getElementById('map-search-kw').value.trim();
-  if (!kw) return;
-  if (!regMap) {
-    initRegMap(37.5665, 126.9780);
-    setTimeout(() => doSearch(kw), 600);
-  } else {
-    doSearch(kw);
-  }
+async function hashPassword(pw) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pw));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
 }
 
-function doSearch(kw) {
-  const ps = new kakao.maps.services.Places();
-  ps.keywordSearch(kw, function(data, status) {
-    if (status === kakao.maps.services.Status.OK && data.length > 0) {
-      const lat = parseFloat(data[0].y);
-      const lng = parseFloat(data[0].x);
-      const pos = new kakao.maps.LatLng(lat, lng);
-      regMap.setCenter(pos);
-      regMap.setLevel(4);
-      regMarker.setPosition(pos);
-      document.getElementById('map-addr-text').innerHTML = '<b>' + data[0].address_name + '</b>';
-      document.getElementById('map-guide').classList.add('hidden');
-    } else {
-      toast('⚠️ 검색 결과가 없어요. 다른 키워드를 입력해보세요.');
+function startSessionCheck() {
+  sessionInterval = setInterval(async () => {
+    const doc = await db.collection('admins').doc(currentAdmin.id).get().catch(() => null);
+    if (!doc || !doc.exists || doc.data().currentSessionId !== sessionId) {
+      clearInterval(sessionInterval);
+      localStorage.removeItem('boss_session');
+      showPopup('세션 만료', '다른 기기에서 로그인되었습니다.', () => showScreen('login'));
+    }
+  }, 30000);
+}
+
+// ═══════════════════════════════════════════════════════
+// MAIN APP
+// ═══════════════════════════════════════════════════════
+function showMainApp() {
+  const role = currentAdmin?.role;
+  document.getElementById('admin-role-badge').textContent = role === 'owner' ? '👑 사장' : '🔑 매니저';
+
+  // 매니저는 담당 거점 필터 자동 적용
+  if (role === 'manager' && currentAdmin?.assignedVenue) {
+    document.getElementById('schedule-venue-filter').value = currentAdmin.assignedVenue;
+  }
+
+  showScreen('home');
+  loadDashboard();
+}
+
+function showScreen(name) {
+  prevScreen = currentScreen;
+  currentScreen = name;
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById(`screen-${name}`);
+  if (el) el.classList.add('active');
+  if (name === 'noti-boss') loadBossNotifications();
+}
+
+function goBack() {
+  if (prevScreen) showScreen(prevScreen);
+  else showScreen('home');
+}
+
+function switchTab(name, btn) {
+  const map = { home:'home', jobs:'jobs', schedule:'schedule', workers:'workers', settle:'settle' };
+  showScreen(map[name]);
+  if (name === 'home') loadDashboard();
+  else if (name === 'jobs') loadJobs();
+  else if (name === 'schedule') { schedCalDate = new Date(); renderScheduleCalendar(); }
+  else if (name === 'workers') loadWorkers();
+  else if (name === 'settle') {}
+
+  document.querySelectorAll('.bottom-nav').forEach(nav => {
+    nav.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+    const idx = ['home','jobs','schedule','workers','settle'].indexOf(name);
+    if (idx >= 0 && nav.querySelectorAll('.nav-item')[idx]) {
+      nav.querySelectorAll('.nav-item')[idx].classList.add('active');
     }
   });
 }
 
-function resetMap() {
-  document.getElementById('map-search-kw').value = '';
-  document.getElementById('map-addr-text').textContent = '위치를 검색하거나 지도를 탭해 마커를 이동하세요';
-  regMap = null; regMarker = null;
-  document.getElementById('reg-kakao-map').innerHTML = '';
-  document.getElementById('map-guide').classList.remove('hidden');
+// ─── DASHBOARD ───
+async function loadDashboard() {
+  const today = new Date().toISOString().split('T')[0];
+  const role = currentAdmin?.role;
+  const venue = currentAdmin?.assignedVenue;
+
+  // 출근 현황
+  let attQuery = db.collection('attendance').where('jobDate','==',today);
+  if (role === 'manager' && venue) attQuery = attQuery.where('jobVenue','==',venue);
+
+  const attSnap = await attQuery.get();
+  const atts = attSnap.docs.map(d => d.data());
+  document.getElementById('ds-total').textContent = atts.length;
+  document.getElementById('ds-gps').textContent = atts.filter(a => a.status === 'checked_in' || a.status === 'completed').length;
+  document.getElementById('ds-moving').textContent = atts.filter(a => a.status === 'checked_in_no_gps').length;
+  document.getElementById('ds-absent').textContent = atts.filter(a => a.status === 'absent').length;
+
+  // 승인 대기
+  let pendingQuery = db.collection('applications').where('status','==','pending');
+  if (role === 'manager' && venue) pendingQuery = pendingQuery.where('jobVenue','==',venue);
+  const pendingSnap = await pendingQuery.orderBy('appliedAt','desc').get().catch(() => pendingQuery.get());
+  document.getElementById('ds-pending').textContent = pendingSnap.size;
+  renderPendingList(pendingSnap.docs);
+
+  // 진행 공고
+  let jobQuery = db.collection('jobs').where('status','in',['open','urgent']);
+  if (role === 'manager' && venue) jobQuery = jobQuery.where('venue','==',venue);
+  const jobSnap = await jobQuery.get();
+  document.getElementById('ds-jobs').textContent = jobSnap.size;
 }
 
-const _origOpenRegModal = typeof openRegModal === 'function' ? openRegModal : null;
+function renderPendingList(docs) {
+  const el = document.getElementById('pending-list');
+  if (!docs.length) { el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--color-sub-text);font-size:13px;">대기 중인 신청이 없습니다</div>'; return; }
+  el.innerHTML = docs.map(doc => {
+    const d = doc.data();
+    return `<div class="app-item">
+      <div class="app-item-info">
+        <div class="app-item-name">${d.workerName || '-'}</div>
+        <div class="app-item-meta">${d.jobTitle || d.jobId} · ${VENUES[d.jobVenue]?.name || d.jobVenue} · ${d.jobDate}</div>
+        <div class="app-item-meta">${d.jobStartTime||''} ~ ${d.jobEndTime||''}</div>
+      </div>
+      <div class="app-item-actions">
+        <button class="btn-sm btn-sm-success" onclick="approveApp('${doc.id}')">승인</button>
+        <button class="btn-sm btn-sm-danger" onclick="rejectApp('${doc.id}')">거절</button>
+      </div>
+    </div>`;
+  }).join('');
+}
 
-// 공고 등록 모달
-function openRegModal(){document.getElementById('reg-modal').style.display='flex';}
-function closeRegModal(e){if(e.target===document.getElementById('reg-modal'))document.getElementById('reg-modal').style.display='none';}
-function submitReg(){document.getElementById('reg-modal').style.display='none';toast('✅ 공고가 등록됐어요!');}
+async function approveApp(appId) {
+  const doc = await db.collection('applications').doc(appId).get();
+  if (!doc.exists) return;
+  const d = doc.data();
 
+  await db.collection('applications').doc(appId).update({
+    status: 'approved',
+    processedBy: currentAdmin?.id || '',
+    processedAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
 
-// ── 멤버 데이터 ──
-const members = [
-  { id:'m1',  name:'김민현', emoji:'🧑', gender:'남', venues:['ltower','whills'],
-    attend:12, absent:0, rating:'★★★★★', score:4.8,
-    schedule:['L타워 3/17 (월)', 'L타워 3/21 (금)'], ace:true },
-  { id:'m2',  name:'나예은', emoji:'👩', gender:'여', venues:['whills'],
-    attend:10, absent:1, rating:'★★★★★', score:4.9,
-    schedule:['W힐스 3/19 (수)', 'W힐스 3/22 (토)'], ace:true },
-  { id:'m3',  name:'강동원', emoji:'🧑', gender:'남', venues:['gonjiam'],
-    attend:9,  absent:0, rating:'★★★★★', score:4.7,
-    schedule:['곤지암 3/17 (월)'], ace:true },
-  { id:'m4',  name:'김진호', emoji:'🧑', gender:'남', venues:['ltower','whills','gonjiam'],
-    attend:8,  absent:1, rating:'★★★★★', score:5.0,
-    schedule:['L타워 3/21 (금)', 'W힐스 3/22 (토)'], ace:false },
-  { id:'m5',  name:'김태범', emoji:'👩', gender:'여', venues:['whills'],
-    attend:7,  absent:1, rating:'★★★★☆', score:4.3,
-    schedule:['W힐스 3/19 (수)'], ace:false },
-  { id:'m6',  name:'박민준', emoji:'🧑', gender:'남', venues:['gonjiam','ltower'],
-    attend:5,  absent:2, rating:'★★★★☆', score:4.1,
-    schedule:['곤지암 3/17 (월)', 'L타워 3/25 (화)'], ace:false },
-  { id:'m7',  name:'이서연', emoji:'👩', gender:'여', venues:['ltower'],
-    attend:6,  absent:0, rating:'★★★★☆', score:4.4,
-    schedule:['L타워 3/17 (월)'], ace:false },
-  { id:'m8',  name:'정하준', emoji:'🧑', gender:'남', venues:['gonjiam'],
-    attend:8,  absent:1, rating:'★★★★☆', score:4.2,
-    schedule:['곤지암 3/17 (월)', '곤지암 3/25 (화)'], ace:false },
-  { id:'m9',  name:'오민지', emoji:'👩', gender:'여', venues:['whills','ltower'],
-    attend:4,  absent:0, rating:'★★★★☆', score:4.0,
-    schedule:['W힐스 3/22 (토)'], ace:false },
-  { id:'m10', name:'최준혁', emoji:'🧑', gender:'남', venues:['ltower'],
-    attend:3,  absent:1, rating:'★★★☆☆', score:3.8,
-    schedule:['L타워 3/21 (금)'], ace:false },
-  { id:'m11', name:'한소희', emoji:'👩', gender:'여', venues:['whills','gonjiam'],
-    attend:5,  absent:2, rating:'★★★☆☆', score:3.5,
-    schedule:['W힐스 3/19 (수)'], ace:false },
-  { id:'m12', name:'임재원', emoji:'🧑', gender:'남', venues:['gonjiam'],
-    attend:4,  absent:1, rating:'★★★☆☆', score:3.3,
-    schedule:['곤지암 3/25 (화)'], ace:false },
-  { id:'m13', name:'윤지민', emoji:'👩', gender:'여', venues:['ltower','whills'],
-    attend:2,  absent:0, rating:'★★★☆☆', score:3.6,
-    schedule:['L타워 3/21 (금)', 'W힐스 3/22 (토)'], ace:false },
-  { id:'m14', name:'조현우', emoji:'🧑', gender:'남', venues:['gonjiam','whills'],
-    attend:3,  absent:2, rating:'★★★☆☆', score:3.1,
-    schedule:['곤지암 3/17 (월)'], ace:false },
-  { id:'m15', name:'신다은', emoji:'👩', gender:'여', venues:['ltower'],
-    attend:2,  absent:1, rating:'★★★☆☆', score:3.0,
-    schedule:['L타워 3/17 (월)'], ace:false },
-  { id:'m16', name:'배성민', emoji:'🧑', gender:'남', venues:['whills','ltower'],
-    attend:1,  absent:0, rating:'★★☆☆☆', score:2.8,
-    schedule:['W힐스 3/22 (토)'], ace:false },
-  { id:'m17', name:'류지현', emoji:'👩', gender:'여', venues:['gonjiam'],
-    attend:2,  absent:1, rating:'★★☆☆☆', score:2.5,
-    schedule:[], ace:false },
-  { id:'m18', name:'이성기', emoji:'👩', gender:'여', venues:['whills','gonjiam'],
-    attend:3,  absent:1, rating:'★★★☆☆', score:3.2,
-    schedule:['W힐스 3/22 (토)'], ace:false },
-  { id:'m19', name:'장민서', emoji:'🧑', gender:'남', venues:['ltower','gonjiam'],
-    attend:1,  absent:2, rating:'★★☆☆☆', score:2.3,
-    schedule:[], ace:false },
-  { id:'m20', name:'이정목', emoji:'🧑', gender:'남', venues:['gonjiam'],
-    attend:2,  absent:2, rating:'★★☆☆☆', score:2.1,
-    schedule:[], ace:false },
-];
+  // 모집 인원 카운트 증가
+  await db.collection('jobs').doc(d.jobId).update({ currentApproved: firebase.firestore.FieldValue.increment(1) });
 
-function renderMembers(){
-  const aceEl=document.getElementById('ace-section');
-  const normEl=document.getElementById('normal-section');
-  if(!aceEl||!normEl) return;
-  // 에이스 라벨 유지
-  const aceLbl=aceEl.querySelector('div');
-  aceEl.innerHTML='';
-  aceEl.appendChild(aceLbl);
-  normEl.innerHTML='';
-  members.forEach(m=>{
-    const el=makeMemberCard(m);
-    if(m.ace) aceEl.appendChild(el);
-    else normEl.appendChild(el);
+  // 알림 생성
+  await db.collection('notifications').add({
+    targetUserId: d.workerId,
+    type: 'approval',
+    title: '신청이 승인됐어요!',
+    body: `${VENUES[d.jobVenue]?.name || d.jobVenue} ${d.jobDate} 근무 승인`,
+    relatedId: appId,
+    isRead: false,
+    isMarketing: false,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+
+  showToast('✅ 승인 완료');
+  loadDashboard();
+}
+
+async function rejectApp(appId) {
+  const doc = await db.collection('applications').doc(appId).get();
+  if (!doc.exists) return;
+  const d = doc.data();
+
+  await db.collection('applications').doc(appId).update({
+    status: 'rejected',
+    processedBy: currentAdmin?.id || '',
+    processedAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+
+  await db.collection('notifications').add({
+    targetUserId: d.workerId,
+    type: 'rejection',
+    title: '신청 결과 안내',
+    body: `${VENUES[d.jobVenue]?.name || d.jobVenue} ${d.jobDate} 신청이 거절됐어요`,
+    relatedId: appId,
+    isRead: false,
+    isMarketing: false,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+
+  showToast('거절 처리 완료');
+  loadDashboard();
+}
+
+// ─── JOBS ───
+async function loadJobs() {
+  const role = currentAdmin?.role;
+  const venue = currentAdmin?.assignedVenue;
+  let query = db.collection('jobs');
+  if (role === 'manager' && venue) query = query.where('venue','==',venue);
+
+  const snap = await query.orderBy('date','desc').get().catch(async () => {
+    return db.collection('jobs').get();
+  });
+
+  const el = document.getElementById('jobs-list');
+  if (!snap.size) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-msg">등록된 공고가 없습니다</div></div>'; return; }
+  el.innerHTML = snap.docs.map(doc => {
+    const d = doc.data();
+    const v = VENUES[d.venue] || {};
+    const statusMap = { open:{ cls:'badge-open', label:'모집중' }, closed:{ cls:'badge-closed', label:'마감' }, urgent:{ cls:'badge-urgent', label:'긴급' } };
+    const s = statusMap[d.status] || statusMap.open;
+    return `<div class="job-admin-card">
+      <div class="job-admin-top">
+        <div class="job-admin-title">${d.title || '-'}</div>
+        <span class="badge ${s.cls}">${s.label}</span>
+      </div>
+      <div class="job-admin-meta">📍 ${d.venueDisplayName || v.name} · ${d.date} · ${d.startTime}~${d.endTime}</div>
+      <div class="job-admin-footer">
+        <div class="job-admin-wage">${(d.hourlyWage||0).toLocaleString()}원/시</div>
+        <div class="job-admin-count">${d.currentApproved||0}/${d.maxWorkers||0}명</div>
+      </div>
+      <div class="job-actions" style="margin-top:10px;">
+        <button class="btn-sm btn-sm-outline" onclick="openJobForm('${doc.id}')">수정</button>
+        ${currentAdmin?.role==='owner' ? `<button class="btn-sm" style="background:#fee2e2;color:var(--color-danger);border:none;border-radius:8px;padding:0 12px;font-size:12px;font-weight:600;cursor:pointer;" onclick="sendUrgentNotification('${doc.id}','${d.title||''}','${d.venue||''}')">긴급 발송</button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openJobForm(jobId) {
+  currentEditJobId = jobId;
+  document.getElementById('job-form-title').textContent = jobId ? '공고 수정' : '공고 등록';
+  document.getElementById('jf-delete-btn').style.display = jobId ? 'block' : 'none';
+
+  if (jobId) {
+    db.collection('jobs').doc(jobId).get().then(doc => {
+      if (!doc.exists) return;
+      const d = doc.data();
+      document.getElementById('jf-title').value = d.title || '';
+      document.getElementById('jf-venue').value = d.venue || '';
+      document.getElementById('jf-date').value = d.date || '';
+      document.getElementById('jf-start').value = d.startTime || '';
+      document.getElementById('jf-end').value = d.endTime || '';
+      document.getElementById('jf-wage').value = d.hourlyWage || '';
+      document.getElementById('jf-bonus').value = d.bonusPoints || '';
+      document.getElementById('jf-max').value = d.maxWorkers || '';
+      document.getElementById('jf-desc').value = d.taskDescription || '';
+      document.getElementById('jf-urgent').checked = !!d.isUrgent;
+    });
+  } else {
+    ['jf-title','jf-venue','jf-date','jf-start','jf-end','jf-wage','jf-bonus','jf-max','jf-desc'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+    document.getElementById('jf-urgent').checked = false;
+  }
+  showScreen('job-form');
+}
+
+function autoFillVenue() {
+  const v = document.getElementById('jf-venue').value;
+  if (v && VENUES[v]) {
+    document.getElementById('jf-wage').value = VENUES[v].defaultWage;
+  }
+}
+
+async function saveJob() {
+  const title = document.getElementById('jf-title').value.trim();
+  const venue = document.getElementById('jf-venue').value;
+  const date = document.getElementById('jf-date').value;
+  const start = document.getElementById('jf-start').value;
+  const end = document.getElementById('jf-end').value;
+  const wage = parseInt(document.getElementById('jf-wage').value);
+  const bonus = parseInt(document.getElementById('jf-bonus').value) || 0;
+  const max = parseInt(document.getElementById('jf-max').value);
+  const desc = document.getElementById('jf-desc').value.trim();
+  const urgent = document.getElementById('jf-urgent').checked;
+
+  if (!title || !venue || !date || !start || !end || !wage || !max) { showToast('필수 항목을 모두 입력해주세요'); return; }
+
+  const v = VENUES[venue] || {};
+  const data = {
+    title, venue, venueDisplayName: v.name || venue,
+    address: v.address || '', lat: v.lat || 0, lng: v.lng || 0,
+    date, startTime: start, endTime: end,
+    hourlyWage: wage, bonusPoints: bonus, taskDescription: desc,
+    maxWorkers: max, isUrgent: urgent,
+    status: urgent ? 'urgent' : 'open',
+    createdBy: currentAdmin?.id || '',
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  if (currentEditJobId) {
+    await db.collection('jobs').doc(currentEditJobId).update(data);
+    showToast('✅ 공고 수정 완료');
+  } else {
+    data.currentApproved = 0;
+    data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+    await db.collection('jobs').add(data);
+    showToast('✅ 공고 등록 완료');
+  }
+  goBack();
+  loadJobs();
+}
+
+async function deleteJob() {
+  showPopup('공고 삭제', '이 공고를 삭제하시겠습니까?', async () => {
+    await db.collection('jobs').doc(currentEditJobId).delete();
+    showToast('공고 삭제 완료');
+    goBack();
+    loadJobs();
+  }, true);
+}
+
+async function sendUrgentNotification(jobId, title, venue) {
+  if (currentAdmin?.role !== 'owner') { showToast('사장님만 긴급 발송 가능합니다'); return; }
+  // 마케팅 동의 사용자에게만 발송
+  const snap = await db.collection('users').where('marketingConsent','==',true).get();
+  const batch = db.batch();
+  snap.forEach(doc => {
+    const ref = db.collection('notifications').doc();
+    batch.set(ref, {
+      targetUserId: doc.id,
+      type: 'urgent',
+      title: '🚨 긴급 구인!',
+      body: `${VENUES[venue]?.name || venue} - ${title}`,
+      relatedId: jobId,
+      isRead: false,
+      isMarketing: true,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  });
+  await batch.commit();
+  showToast(`✅ ${snap.size}명에게 긴급 구인 알림 발송`);
+}
+
+// ─── SCHEDULE ───
+async function loadSchedule() { renderScheduleCalendar(); }
+
+function changeScheduleMonth(dir) { schedCalDate.setMonth(schedCalDate.getMonth() + dir); renderScheduleCalendar(); }
+
+async function renderScheduleCalendar() {
+  const y = schedCalDate.getFullYear(), m = schedCalDate.getMonth();
+  document.getElementById('schedule-cal-label').textContent = `${y}년 ${m+1}월`;
+  const venueFilter = document.getElementById('schedule-venue-filter').value;
+
+  // 해당 월 attendance/applications 로드
+  const start = `${y}-${String(m+1).padStart(2,'0')}-01`;
+  const end = `${y}-${String(m+1).padStart(2,'0')}-31`;
+  let q = db.collection('applications').where('status','in',['approved','pending']).where('jobDate','>=',start).where('jobDate','<=',end);
+  if (venueFilter) q = q.where('jobVenue','==',venueFilter);
+  const snap = await q.get().catch(() => db.collection('applications').where('jobDate','>=',start).where('jobDate','<=',end).get());
+  schedData = {};
+  snap.forEach(d => { schedData[d.data().jobDate] = (schedData[d.data().jobDate]||0) + 1; });
+
+  // calendar
+  const grid = document.getElementById('schedule-calendar-grid');
+  grid.innerHTML = ['일','월','화','수','목','금','토'].map(d => `<div class="cal-dow">${d}</div>`).join('');
+  const first = new Date(y, m, 1), last = new Date(y, m+1, 0);
+  const today = new Date().toDateString();
+  for (let i = 0; i < first.getDay(); i++) grid.innerHTML += `<div class="cal-day other-month"></div>`;
+  for (let d = 1; d <= last.getDate(); d++) {
+    const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday = new Date(y,m,d).toDateString() === today;
+    const cnt = schedData[dateStr] || 0;
+    grid.innerHTML += `<div class="cal-day${isToday?' today':''}${cnt?' has-event':''}" onclick="showScheduleDay('${dateStr}')">${d}${cnt?`<div style="font-size:9px;opacity:0.7;">${cnt}</div>`:''}</div>`;
+  }
+}
+
+async function showScheduleDay(dateStr) {
+  document.getElementById('schedule-date-title').textContent = dateStr + ' 근무 현황';
+  const el = document.getElementById('schedule-day-workers');
+  el.innerHTML = '<div class="loading-wrap"><div class="loading-spinner"></div></div>';
+  const venueFilter = document.getElementById('schedule-venue-filter').value;
+
+  // 출근 현황 로드
+  let attQ = db.collection('attendance').where('jobDate','==',dateStr);
+  if (venueFilter) attQ = attQ.where('jobVenue','==',venueFilter);
+  const attSnap = await attQ.get();
+  const attMap = {};
+  attSnap.forEach(d => { attMap[d.data().workerId] = d.data(); });
+
+  let appQ = db.collection('applications').where('jobDate','==',dateStr).where('status','in',['approved','pending']);
+  if (venueFilter) appQ = appQ.where('jobVenue','==',venueFilter);
+  const appSnap = await appQ.get();
+
+  if (!appSnap.size) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">📅</div><div class="empty-msg">이 날 근무 일정이 없습니다</div></div>'; return; }
+
+  el.innerHTML = '';
+  appSnap.forEach(doc => {
+    const d = doc.data();
+    const att = attMap[d.workerId];
+    let statusHtml = '<span style="color:var(--color-sub-text);font-size:12px;">출근 전</span>';
+    if (att) {
+      if (att.status === 'checked_in_no_gps') statusHtml = '<span style="color:var(--color-sub-text);font-size:13px;font-weight:600;">📍 이동 중</span>';
+      else if (att.status === 'checked_in' || att.status === 'completed') statusHtml = '<span style="color:var(--color-success);font-size:13px;font-weight:600;">✅ 출근 확인</span>';
+      else if (att.status === 'absent') statusHtml = '<span style="color:var(--color-danger);font-size:13px;font-weight:600;">❌ 결근</span>';
+    }
+    const div = document.createElement('div');
+    div.className = 'card';
+    div.style.marginBottom = '8px';
+    div.style.padding = '12px 14px';
+    div.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div style="font-size:14px;font-weight:700;">${d.workerName || '-'}</div>
+          <div style="font-size:12px;color:var(--color-sub-text);">${VENUES[d.jobVenue]?.name || d.jobVenue} · ${d.jobTitle || ''}</div>
+        </div>
+        <div style="text-align:right;">${statusHtml}</div>
+      </div>`;
+    el.appendChild(div);
   });
 }
 
-function makeMemberCard(m){
-  const div=document.createElement('div');
-  div.className='member-card'+(m.ace?' ace':'');
-  div.dataset.id=m.id;
-  div.dataset.v=m.venues.join(' ');
-  const sched=m.schedule.length?m.schedule.map(s=>`<b>${s}</b>`).join(' · '):'출근 예정 없음';
-  div.innerHTML=`
-    <div class="member-top">
-      <div class="member-av">${m.emoji}${m.ace?'<span class="ace-badge">⭐</span>':''}</div>
-      <div style="flex:1">
-        <div style="display:flex;align-items:center;gap:6px">
-          <div class="member-name">${m.name}</div>
-          ${m.ace?'<span class="ace-label">⭐ 에이스</span>':''}
+// ─── WORKERS ───
+let workersData = [];
+
+async function loadWorkers() {
+  const el = document.getElementById('workers-list');
+  el.innerHTML = '<div class="loading-wrap"><div class="loading-spinner"></div></div>';
+  const snap = await db.collection('users').orderBy('isAce','desc').get().catch(() => db.collection('users').get());
+  workersData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  workersData.sort((a,b) => {
+    if (a.isAce !== b.isAce) return a.isAce ? -1 : 1;
+    return (b.totalWorkCount||0) - (a.totalWorkCount||0);
+  });
+  renderWorkersList(workersData);
+}
+
+function renderWorkersList(workers) {
+  const el = document.getElementById('workers-list');
+  if (!workers.length) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">👥</div><div class="empty-msg">근무자가 없습니다</div></div>'; return; }
+  el.innerHTML = workers.map(w => `
+    <div class="worker-item" onclick="openWorkerDetail('${w.id}')">
+      <div class="worker-avatar">${w.isAce ? '⭐' : '👤'}</div>
+      <div class="worker-info">
+        <div class="worker-name">
+          ${w.name || '-'}
+          ${w.isAce ? '<span class="ace-tag">ACE</span>' : ''}
+          ${w.isBanned ? '<span class="ban-tag">차단</span>' : ''}
+          ${(w.warningCount||0) > 0 && !w.isBanned ? `<span class="warning-tag">⚠️${w.warningCount}/3</span>` : ''}
         </div>
-        <div class="member-venue">${m.rating} · ${m.venues.map(v=>({ltower:'L타워',whills:'W힐스',gonjiam:'곤지암'}[v])).join(', ')}</div>
+        <div class="worker-stats">근무 ${w.totalWorkCount||0}회 · ${w.region||'-'} · ${w.phone||'-'}</div>
       </div>
-      <button class="ace-star-btn" onclick="toggleAce('${m.id}',event)" title="에이스 지정">${m.ace?'★':'☆'}</button>
+      <span style="font-size:20px;color:#cbd5e1;">›</span>
+    </div>`).join('');
+}
+
+function filterWorkers() {
+  const q = document.getElementById('worker-search').value.trim().toLowerCase();
+  if (!q) { renderWorkersList(workersData); return; }
+  renderWorkersList(workersData.filter(w => (w.name||'').toLowerCase().includes(q) || (w.phone||'').includes(q)));
+}
+
+function showWorkerTab(tab) {
+  document.getElementById('workers-list').style.display = tab === 'workers' ? 'block' : 'none';
+  document.getElementById('inquiry-list-boss').style.display = tab === 'inquiry' ? 'block' : 'none';
+  document.getElementById('wtab-workers').classList.toggle('active', tab === 'workers');
+  document.getElementById('wtab-workers').style.borderBottom = tab === 'workers' ? '2px solid var(--color-royal)' : '2px solid transparent';
+  document.getElementById('wtab-workers').style.color = tab === 'workers' ? 'var(--color-royal)' : '';
+  document.getElementById('wtab-inquiry').classList.toggle('active', tab === 'inquiry');
+  document.getElementById('wtab-inquiry').style.borderBottom = tab === 'inquiry' ? '2px solid var(--color-royal)' : '2px solid transparent';
+  document.getElementById('wtab-inquiry').style.color = tab === 'inquiry' ? 'var(--color-royal)' : '';
+  if (tab === 'inquiry') loadInquiriesBoss();
+}
+
+async function openWorkerDetail(workerId) {
+  currentViewWorkerId = workerId;
+  showScreen('worker-detail');
+  const doc = await db.collection('users').doc(workerId).get();
+  if (!doc.exists) { showToast('근무자 정보를 찾을 수 없습니다'); return; }
+  const w = { id: doc.id, ...doc.data() };
+  renderWorkerDetail(w);
+}
+
+async function renderWorkerDetail(w) {
+  document.getElementById('wd-header-title').textContent = w.name || '근무자';
+
+  // 최근 근무 이력
+  const attSnap = await db.collection('attendance').where('workerId','==',w.id).orderBy('jobDate','desc').limit(10).get().catch(() => ({ docs: [] }));
+  const atts = attSnap.docs.map(d => d.data());
+
+  const wc = w.warningCount || 0;
+  const isOwner = currentAdmin?.role === 'owner';
+
+  document.getElementById('worker-detail-body').innerHTML = `
+    <div class="worker-detail-header">
+      <div class="wd-avatar">${w.isAce ? '⭐' : '👤'}</div>
+      <div>
+        <div class="wd-name">${w.name || '-'} ${w.isBanned ? '<span style="font-size:13px;background:rgba(255,0,0,0.3);padding:2px 8px;border-radius:5px;">차단됨</span>' : ''}</div>
+        <div class="wd-sub">${w.region || '-'} · ${w.gender === 'male' ? '남성' : '여성'}</div>
+        <div class="stat-row">
+          <span class="stat-chip">근무 ${w.totalWorkCount||0}회</span>
+          <span class="stat-chip">${w.totalPoints||0}P</span>
+          ${wc > 0 ? `<span class="stat-chip" style="background:rgba(239,68,68,0.3);">⚠️경고 ${wc}/3</span>` : ''}
+        </div>
+      </div>
     </div>
-    <div class="member-stat-row">
-      <div class="mstat"><div class="mstat-num c-ok">${m.attend}</div><div class="mstat-lbl">출근</div></div>
-      <div class="mstat"><div class="mstat-num c-err">${m.absent}</div><div class="mstat-lbl">결근</div></div>
-      <div class="mstat"><div class="mstat-num">${m.attend+m.absent}</div><div class="mstat-lbl">총 근무</div></div>
-      <div class="mstat"><div class="mstat-num c-acc">${m.absent===0?'100':Math.round(m.attend/(m.attend+m.absent)*100)}%</div><div class="mstat-lbl">출근율</div></div>
+
+    <!-- 기본 정보 -->
+    <div class="card">
+      <div class="section-title">기본 정보</div>
+      <div style="display:grid;gap:8px;font-size:13px;">
+        <div style="display:flex;justify-content:space-between;"><span style="color:var(--color-sub-text);">생년월일</span><span>${w.birthDate||'-'}</span></div>
+        <div style="display:flex;justify-content:space-between;"><span style="color:var(--color-sub-text);">연락처</span><span>${w.phone||'-'}</span></div>
+        <div style="display:flex;justify-content:space-between;"><span style="color:var(--color-sub-text);">은행/계좌</span><span>${w.bankName||'-'} ${w.accountNumber||''}</span></div>
+        <div style="display:flex;justify-content:space-between;"><span style="color:var(--color-sub-text);">예금주</span><span>${w.accountHolder||'-'}</span></div>
+      </div>
     </div>
-    <div class="member-schedule">📅 예정 : ${sched}</div>
+
+    <!-- 경고 관리 -->
+    <div class="card">
+      <div class="section-title">경고 관리</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <span style="font-size:16px;font-weight:800;color:${wc>0?'var(--color-danger)':'var(--color-success)'};">경고 ${wc}/3회</span>
+        <div style="display:flex;gap:6px;">
+          <button class="btn-sm btn-sm-warning" onclick="addWarning('${w.id}','${w.name||''}')">+경고</button>
+          ${wc > 0 ? `<button class="btn-sm btn-sm-outline" onclick="removeWarning('${w.id}')">경고 해제</button>` : ''}
+          ${w.isBanned ? `<button class="btn-sm btn-sm-success" onclick="unbanWorker('${w.id}')">차단 해제</button>` : ''}
+        </div>
+      </div>
+    </div>
+
+    <!-- 에이스/관리 -->
+    <div class="card">
+      <div class="section-title">근무자 관리</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn-sm ${w.isAce?'btn-sm-warning':'btn-sm-outline'}" onclick="toggleAce('${w.id}',${!w.isAce})">${w.isAce?'⭐ 에이스 해제':'⭐ 에이스 지정'}</button>
+        <button class="btn-sm btn-sm-outline" onclick="openBlacklist('${w.id}','${(w.blacklistMemo||'').replace(/'/g,"\\'")}')">🚫 블랙리스트 메모</button>
+        ${isOwner ? `<button class="btn-sm btn-sm-primary" onclick="openGrantPoint('${w.id}')">💰 포인트 지급</button>` : ''}
+      </div>
+      ${w.blacklistMemo ? `<div style="margin-top:10px;background:#fff3f3;border-radius:8px;padding:10px;font-size:12px;color:var(--color-danger);">🚫 ${w.blacklistMemo}</div>` : ''}
+    </div>
+
+    <!-- 최근 근무 이력 -->
+    <div class="card">
+      <div class="section-title">최근 근무 이력</div>
+      ${atts.length ? atts.map(a => {
+        const attStatus = { checked_in:'✅', checked_in_no_gps:'📍', absent:'❌', completed:'✅', waiting_checkin:'⏳' };
+        return `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;">
+          <span>${a.jobDate} · ${VENUES[a.jobVenue]?.name||a.jobVenue}</span>
+          <span>${attStatus[a.status]||a.status}</span>
+        </div>`;
+      }).join('') : '<div style="color:var(--color-sub-text);font-size:13px;">근무 이력이 없습니다</div>'}
+    </div>
   `;
-  return div;
 }
 
-function toggleAce(id, e){
-  e.stopPropagation();
-  const m=members.find(x=>x.id===id);
-  if(!m) return;
-  m.ace=!m.ace;
-  renderMembers();
-  toast(m.ace?`⭐ ${m.name}님을 에이스로 지정했어요!`:`${m.name}님의 에이스 지정을 해제했어요`);
+async function addWarning(workerId, workerName) {
+  const doc = await db.collection('users').doc(workerId).get();
+  const wc = (doc.data()?.warningCount||0) + 1;
+  const isBanned = wc >= 3;
+  await db.collection('users').doc(workerId).update({ warningCount: wc, isBanned });
+  await db.collection('notifications').add({
+    targetUserId: workerId,
+    type: 'warning',
+    title: '경고 안내',
+    body: `경고 ${wc}회 부여 (${wc}/3)${isBanned?' — 신청이 제한됩니다':''}`,
+    relatedId: null, isRead: false, isMarketing: false,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+  showToast(`경고 ${wc}회 부여${isBanned?' — 차단됨':''}`);
+  openWorkerDetail(workerId);
 }
 
-// 초기 렌더
-document.addEventListener('DOMContentLoaded', renderMembers);
-setTimeout(renderMembers, 100);
-
-// 토스트
-let tt;
-function toast(msg){
-  const t=document.getElementById('toast');
-  t.textContent=msg;t.classList.add('show');
-  clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),2200);
+async function removeWarning(workerId) {
+  const doc = await db.collection('users').doc(workerId).get();
+  const wc = Math.max(0, (doc.data()?.warningCount||1) - 1);
+  await db.collection('users').doc(workerId).update({ warningCount: wc, isBanned: false });
+  showToast('경고 1회 해제');
+  openWorkerDetail(workerId);
 }
+
+async function unbanWorker(workerId) {
+  await db.collection('users').doc(workerId).update({ isBanned: false, warningCount: 0 });
+  showToast('차단 해제 완료');
+  openWorkerDetail(workerId);
+}
+
+async function toggleAce(workerId, isAce) {
+  await db.collection('users').doc(workerId).update({ isAce });
+  showToast(isAce ? '⭐ 에이스 지정' : '에이스 해제');
+  openWorkerDetail(workerId);
+}
+
+function openBlacklist(workerId, memo) {
+  currentViewWorkerId = workerId;
+  document.getElementById('blacklist-memo').value = memo || '';
+  openModal('modal-blacklist');
+}
+
+async function submitBlacklist() {
+  const memo = document.getElementById('blacklist-memo').value.trim();
+  await db.collection('users').doc(currentViewWorkerId).update({ blacklistMemo: memo || null });
+  closeModal('modal-blacklist');
+  showToast('메모 저장 완료');
+  openWorkerDetail(currentViewWorkerId);
+}
+
+function openGrantPoint(workerId) {
+  pendingGrantWorkerId = workerId;
+  document.getElementById('grant-amount').value = '';
+  document.getElementById('grant-desc').value = '';
+  openModal('modal-grant-point');
+}
+
+async function submitGrantPoint() {
+  const amt = parseInt(document.getElementById('grant-amount').value);
+  const desc = document.getElementById('grant-desc').value.trim();
+  if (!amt || amt <= 0) { showToast('금액을 입력해주세요'); return; }
+  if (!desc) { showToast('지급 사유를 입력해주세요'); return; }
+
+  await db.collection('points').add({
+    workerId: pendingGrantWorkerId,
+    amount: amt, type: 'bonus',
+    jobId: null, grantedBy: currentAdmin?.id || '',
+    description: desc,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    expiresAt: firebase.firestore.Timestamp.fromDate(new Date(Date.now() + 365*24*3600*1000))
+  });
+  await db.collection('users').doc(pendingGrantWorkerId).update({ totalPoints: firebase.firestore.FieldValue.increment(amt) });
+  await db.collection('notifications').add({
+    targetUserId: pendingGrantWorkerId,
+    type: 'point',
+    title: '포인트 적립!',
+    body: `+${amt.toLocaleString()}P · ${desc}`,
+    relatedId: null, isRead: false, isMarketing: true,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+  closeModal('modal-grant-point');
+  showToast(`✅ ${amt.toLocaleString()}P 지급 완료`);
+}
+
+// ─── INQUIRY ───
+async function loadInquiriesBoss() {
+  const el = document.getElementById('inquiry-list-boss');
+  el.innerHTML = '<div class="loading-wrap"><div class="loading-spinner"></div></div>';
+  const snap = await db.collection('inquiries').orderBy('createdAt','desc').limit(50).get();
+  if (!snap.size) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">💬</div><div class="empty-msg">문의가 없습니다</div></div>'; return; }
+  el.innerHTML = snap.docs.map(doc => {
+    const d = doc.data();
+    const isOpen = d.status === 'open';
+    return `<div class="inquiry-item">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <span style="font-size:13px;font-weight:700;">${d.userName||'-'} · <span style="color:var(--color-royal);">${CATEGORY_LABELS[d.category]||d.category}</span></span>
+        <span class="inquiry-status ${isOpen?'status-open':'status-replied'}">${isOpen?'미답변':'답변완료'}</span>
+      </div>
+      <div style="font-size:13px;color:var(--color-sub-text);margin-bottom:8px;">${d.content||''}</div>
+      ${d.reply ? `<div style="background:var(--color-ice);border-radius:8px;padding:8px;font-size:12px;"><b>답변:</b> ${d.reply}</div>` : ''}
+      ${isOpen ? `<button class="btn-sm btn-sm-primary" style="margin-top:8px;" onclick="openInquiryReply('${doc.id}','${(d.content||'').replace(/'/g,"\\'")}')">답변하기</button>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function openInquiryReply(id, question) {
+  pendingInquiryId = id;
+  document.getElementById('inquiry-question-view').textContent = question;
+  document.getElementById('inquiry-reply-text').value = '';
+  openModal('modal-inquiry-reply');
+}
+
+async function submitInquiryReply() {
+  const reply = document.getElementById('inquiry-reply-text').value.trim();
+  if (!reply) { showToast('답변 내용을 입력해주세요'); return; }
+  const doc = await db.collection('inquiries').doc(pendingInquiryId).get();
+  if (!doc.exists) return;
+  await doc.ref.update({
+    reply, repliedBy: currentAdmin?.id || '',
+    repliedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    status: 'replied'
+  });
+  await db.collection('notifications').add({
+    targetUserId: doc.data().userId,
+    type: 'inquiry_reply',
+    title: '문의 답변 등록',
+    body: '문의하신 내용에 답변이 등록됐어요',
+    relatedId: pendingInquiryId, isRead: false, isMarketing: false,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+  closeModal('modal-inquiry-reply');
+  showToast('✅ 답변 등록 완료');
+  loadInquiriesBoss();
+}
+
+// ─── SETTLEMENT ───
+let settleRows = [];
+
+function initSettleYears() {
+  const sel = document.getElementById('settle-year');
+  const now = new Date().getFullYear();
+  for (let y = now; y >= now - 2; y--) sel.innerHTML += `<option>${y}</option>`;
+  document.getElementById('settle-month').value = String(new Date().getMonth()+1).padStart(2,'0');
+}
+
+async function loadSettlement() {
+  const year = document.getElementById('settle-year').value;
+  const month = document.getElementById('settle-month').value;
+  const venueF = document.getElementById('settle-venue').value;
+  const prefix = `${year}-${month}`;
+
+  let attQ = db.collection('attendance').where('jobDate','>=',`${prefix}-01`).where('jobDate','<=',`${prefix}-31`).where('status','in',['completed','checked_in']);
+  if (venueF) attQ = attQ.where('jobVenue','==',venueF);
+  const attSnap = await attQ.get().catch(() => db.collection('attendance').where('jobDate','>=',`${prefix}-01`).where('jobDate','<=',`${prefix}-31`).get());
+
+  if (!attSnap.size) { showToast('해당 기간 근무 내역이 없습니다'); return; }
+
+  // Job 정보 및 User 정보 로드
+  const jobIds = [...new Set(attSnap.docs.map(d => d.data().jobId).filter(Boolean))];
+  const workerIds = [...new Set(attSnap.docs.map(d => d.data().workerId).filter(Boolean))];
+
+  const [jobs, users] = await Promise.all([
+    Promise.all(jobIds.map(id => db.collection('jobs').doc(id).get())),
+    Promise.all(workerIds.map(id => db.collection('users').doc(id).get()))
+  ]);
+  const jobMap = {};
+  jobs.forEach(d => { if (d.exists) jobMap[d.id] = d.data(); });
+  const userMap = {};
+  users.forEach(d => { if (d.exists) userMap[d.id] = d.data(); });
+
+  settleRows = [];
+  attSnap.forEach(doc => {
+    const a = doc.data();
+    const job = jobMap[a.jobId] || {};
+    const user = userMap[a.workerId] || {};
+    const checkIn = a.gpsVerifiedTime?.toDate ? a.gpsVerifiedTime.toDate() : null;
+    const checkOut = a.checkOutTime?.toDate ? a.checkOutTime.toDate() : null;
+    let hours = 0;
+    if (checkIn && checkOut) hours = Math.round((checkOut - checkIn) / 3600000 * 10) / 10;
+    const wage = job.hourlyWage || 0;
+    const pay = Math.round(hours * wage);
+
+    settleRows.push({
+      name: user.name || a.workerName,
+      birthDate: user.birthDate || '',
+      phone: user.phone || '',
+      bank: `${user.bankName||''} ${user.accountNumber||''}`,
+      venue: VENUES[a.jobVenue]?.name || a.jobVenue,
+      date: a.jobDate,
+      checkIn: checkIn ? checkIn.toLocaleTimeString('ko-KR', {hour:'2-digit',minute:'2-digit'}) : '-',
+      checkOut: checkOut ? checkOut.toLocaleTimeString('ko-KR', {hour:'2-digit',minute:'2-digit'}) : '-',
+      hours, wage, pay
+    });
+  });
+
+  const tbody = document.getElementById('settle-tbody');
+  tbody.innerHTML = settleRows.map(r => `<tr>
+    <td>${r.name}</td><td>${r.venue}</td><td>${r.date}</td>
+    <td>${r.checkIn}</td><td>${r.checkOut}</td>
+    <td>${r.hours}h</td><td>${r.wage.toLocaleString()}원</td>
+    <td style="font-weight:700;">${r.pay.toLocaleString()}원</td>
+  </tr>`).join('');
+
+  const total = settleRows.reduce((s,r) => s + r.pay, 0);
+  document.getElementById('settle-grand-total').textContent = total.toLocaleString() + '원';
+  document.getElementById('settle-result').style.display = 'block';
+}
+
+function exportExcel() {
+  if (!settleRows.length) { showToast('먼저 조회해주세요'); return; }
+  const headers = ['이름','생년월일','연락처','은행/계좌','거점','근무일','출근시간','퇴근시간','근무시간(h)','시급','지급예정액'];
+  const data = [headers, ...settleRows.map(r => [r.name,r.birthDate,r.phone,r.bank,r.venue,r.date,r.checkIn,r.checkOut,r.hours,r.wage,r.pay])];
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '급여정산');
+  const month = document.getElementById('settle-month').value;
+  const year = document.getElementById('settle-year').value;
+  XLSX.writeFile(wb, `잡핏_급여정산_${year}${month}.xlsx`);
+  showToast('📥 엑셀 다운로드 완료');
+}
+
+// ─── NOTIFICATIONS ───
+async function loadBossNotifications() {
+  if (!currentAdmin) return;
+  const el = document.getElementById('boss-noti-list');
+  const snap = await db.collection('notifications').where('targetUserId','==',currentAdmin.id).orderBy('createdAt','desc').limit(30).get().catch(() => ({ docs:[] }));
+  if (!snap.docs.length) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">🔔</div><div class="empty-msg">알림이 없습니다</div></div>'; return; }
+  el.innerHTML = snap.docs.map(doc => {
+    const d = doc.data();
+    const time = d.createdAt?.toDate ? formatRelTime(d.createdAt.toDate()) : '';
+    return `<div style="padding:14px 16px;background:#fff;border-bottom:1px solid #f1f5f9;${!d.isRead?'background:#EFF6FF;':''}">
+      <div style="font-size:14px;font-weight:600;margin-bottom:2px;">${d.title||''}</div>
+      <div style="font-size:13px;color:var(--color-sub-text);">${d.body||''}</div>
+      <div style="font-size:11px;color:#94a3b8;margin-top:3px;">${time}</div>
+    </div>`;
+  }).join('');
+}
+
+function formatRelTime(date) {
+  const diff = Date.now() - date.getTime();
+  if (diff < 60000) return '방금 전';
+  if (diff < 3600000) return `${Math.floor(diff/60000)}분 전`;
+  if (diff < 86400000) return `${Math.floor(diff/3600000)}시간 전`;
+  return `${Math.floor(diff/86400000)}일 전`;
+}
+
+// ─── LOGOUT ───
+async function logout() {
+  if (currentAdmin) await db.collection('admins').doc(currentAdmin.id).update({ currentSessionId: null }).catch(() => {});
+  clearInterval(sessionInterval);
+  localStorage.removeItem('boss_session');
+  currentAdmin = null;
+  showScreen('login');
+}
+
+// ═══════════════════════════════════════════════════════
+// POPUP / MODAL / TOAST
+// ═══════════════════════════════════════════════════════
+let popupCallback = null;
+
+function showPopup(title, desc, onConfirm, isDanger = false) {
+  let overlay = document.getElementById('generic-popup');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'generic-popup';
+    overlay.className = 'popup-overlay';
+    overlay.innerHTML = `<div class="popup-box">
+      <div class="popup-title" id="gp-title"></div>
+      <div class="popup-desc" id="gp-desc"></div>
+      <div class="popup-btns">
+        <button class="popup-cancel" onclick="closeGenericPopup()">취소</button>
+        <button id="gp-confirm" onclick="confirmGenericPopup()">확인</button>
+      </div>
+    </div>`;
+    document.body.appendChild(overlay);
+  }
+  document.getElementById('gp-title').textContent = title;
+  document.getElementById('gp-desc').textContent = desc;
+  const cfm = document.getElementById('gp-confirm');
+  cfm.className = isDanger ? 'popup-confirm-danger' : 'popup-confirm';
+  popupCallback = onConfirm;
+  overlay.style.display = 'flex';
+}
+function confirmGenericPopup() { closeGenericPopup(); if (popupCallback) popupCallback(); }
+function closeGenericPopup() { const el = document.getElementById('generic-popup'); if (el) el.style.display = 'none'; }
+function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+function showToast(msg) {
+  document.querySelectorAll('.toast').forEach(e => e.remove());
+  const t = document.createElement('div');
+  t.className = 'toast'; t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2600);
+}
+
+// ═══════════════════════════════════════════════════════
+// START
+// ═══════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', init);
 </script>
 </body>
 </html>
