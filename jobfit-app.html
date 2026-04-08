@@ -1496,9 +1496,29 @@ async function checkSession() {
 // ═══════════════════════════════════════════════════════
 // KAKAO LOGIN
 // ═══════════════════════════════════════════════════════
-function loginWithKakao() {
-  const redirectUri = window.location.href.split('?')[0];
-  Kakao.Auth.authorize({ redirectUri });
+async function loginWithKakao() {
+  // 테스트용 임시 로그인 (카카오 SDK 설정 전)
+  try {
+    const testEmail = 'test@jobfit.app';
+    const testPassword = 'jobfit2025test';
+    let cred;
+    try {
+      cred = await auth.signInWithEmailAndPassword(testEmail, testPassword);
+    } catch(e) {
+      cred = await auth.createUserWithEmailAndPassword(testEmail, testPassword);
+    }
+    currentUser = cred.user;
+    const doc = await db.collection('users').doc(currentUser.uid).get();
+    if (doc.exists) {
+      currentWorker = { id: doc.id, ...doc.data() };
+      startSession();
+      showMainApp();
+    } else {
+      showScreen('register');
+    }
+  } catch(e) {
+    showToast('오류: ' + e.message);
+  }
 }
 
 async function handleKakaoCallback(code) {
