@@ -1352,8 +1352,8 @@ const FIREBASE_CONFIG = {
   measurementId: "G-DREN8TFYRW"
 };
 const KAKAO_JS_KEY = "37dbcee3a8a1a54998b9172ea8afb7a8";
+const KAKAO_REST_API_KEY = "0bbe84dee9ec9868f44c6254d572fd5f";
 const APP_VERSION = "1.0.0";
-const CUSTOM_TOKEN_ENDPOINT = "https://YOUR_REGION-YOUR_PROJECT.cloudfunctions.net/kakaoCustomToken";
 
 // 거점 데이터
 const VENUES = {
@@ -1443,9 +1443,19 @@ function compareVersions(a, b) {
 }
 
 async function checkAuth() {
+  // 카카오 로그인 리다이렉트 콜백 처리
+  const params = new URLSearchParams(window.location.search);
+  const kakaoCode = params.get('code');
+  if (kakaoCode) {
+    window.history.replaceState({}, '', window.location.pathname);
+    await new Promise(r => setTimeout(r, 1000));
+    await handleKakaoCallback(kakaoCode);
+    return;
+  }
+
   return new Promise(resolve => {
     auth.onAuthStateChanged(async user => {
-      await new Promise(r => setTimeout(r, 1500)); // splash delay
+      await new Promise(r => setTimeout(r, 1500));
       if (user) {
         currentUser = user;
         const doc = await db.collection('users').doc(user.uid).get();
@@ -1486,40 +1496,62 @@ async function checkSession() {
 // ═══════════════════════════════════════════════════════
 // KAKAO LOGIN
 // ═══════════════════════════════════════════════════════
-async function loginWithKakao() {
+function loginWithKakao() {
+  const redirectUri = window.location.href.split('?')[0];
+  Kakao.Auth.authorize({ redirectUri });
+}
+
+async function handleKakaoCallback(code) {
+  showScreen('splash');
   try {
-    Kakao.Auth.login({
-      success: async function(authObj) {
-        try {
-          Kakao.API.request({
-            url: '/v2/user/me',
-            success: async function(res) {
-              const kakaoId = String(res.id);
-              const resp = await fetch(CUSTOM_TOKEN_ENDPOINT, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ kakaoId })
-              });
-              const { customToken } = await resp.json();
-              const cred = await auth.signInWithCustomToken(customToken);
-              currentUser = cred.user;
-              const doc = await db.collection('users').doc(currentUser.uid).get();
-              if (doc.exists) {
-                currentWorker = { id: doc.id, ...doc.data() };
-                startSession();
-                showMainApp();
-              } else {
-                showScreen('register');
-              }
-            },
-            fail: function(err) { showToast('카카오 정보를 가져오지 못했습니다.'); }
-          });
-        } catch(e) { showToast('로그인 중 오류: ' + e.message); }
-      },
-      fail: function(err) { showToast('카카오 로그인 실패'); }
+    // 1. 인가코드 → 액세스 토큰 교환
+    const redirectUri = window.location.href.split('?')[0];
+    const tokenRes = await fetch('https://kauth.kakao.com/oauth/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8' },
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        client_id: KAKAO_REST_API_KEY,
+        redirect_uri: redirectUri,
+        code,
+      }).toString()
     });
+    const tokenData = await tokenRes.json();
+    if (tokenData.error) throw new Error(tokenData.error_description || tokenData.error);
+
+    // 2. 카카오 사용자 정보 조회
+    const userRes = await fetch('https://kapi.kakao.com/v2/user/me', {
+      headers: { 'Authorization': `Bearer ${tokenData.access_token}` }
+    });
+    const userData = await userRes.json();
+    const kakaoId = String(userData.id);
+
+    // 3. Firebase Email/Password로 로그인 (카카오 ID 기반 고정 계정)
+    const email = `kakao_${kakaoId}@jobfit.app`;
+    const password = `jf_${kakaoId}_2025`;
+
+    let cred;
+    try {
+      cred = await auth.signInWithEmailAndPassword(email, password);
+    } catch(e) {
+      if (e.code === 'auth/user-not-found' || e.code === 'auth/invalid-credential' || e.code === 'auth/invalid-email') {
+        cred = await auth.createUserWithEmailAndPassword(email, password);
+      } else throw e;
+    }
+
+    currentUser = cred.user;
+    const doc = await db.collection('users').doc(currentUser.uid).get();
+    if (doc.exists) {
+      currentWorker = { id: doc.id, ...doc.data() };
+      startSession();
+      showMainApp();
+    } else {
+      showScreen('register');
+    }
   } catch(e) {
-    showToast('카카오 SDK 오류: ' + e.message);
+    console.error('카카오 로그인 오류:', e);
+    showToast('로그인 오류: ' + e.message);
+    showScreen('login');
   }
 }
 
@@ -2681,7 +2713,7 @@ function showToast(msg) {
 // KAKAO MAP LOAD
 // ═══════════════════════════════════════════════════════
 function loadKakaoMap() {
-  if (KAKAO_JS_KEY === 'YOUR_KAKAO_JS_APP_KEY') return;
+  if (!KAKAO_JS_KEY) return;
   const s = document.createElement('script');
   s.type = 'text/javascript';
   s.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_JS_KEY}&autoload=false`;
